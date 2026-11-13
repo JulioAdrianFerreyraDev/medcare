@@ -1,1 +1,29 @@
 docs/jira-stories-breakdown-*.md
+
+# Backend (Maven / Java)
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/timing.properties
+
+# Frontend (Nuxt 3 / Bun)
+frontend/node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/.nitro/
+frontend/.cache/
+frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
+
+# Environment & IDE
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
