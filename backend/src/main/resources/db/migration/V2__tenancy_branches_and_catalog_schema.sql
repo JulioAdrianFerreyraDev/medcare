@@ -1,5 +1,5 @@
--- V2__epic1_tenancy_branches_catalog.sql
--- Epic AHC-1: Multi-Tenancy (AHC-3), Multi-Branch & Physical Rooms (AHC-4), Provider Services Catalog (AHC-5)
+-- V2__tenancy_branches_and_catalog_schema.sql
+-- Multi-Tenancy (AHC-3), Multi-Branch & Physical Rooms (AHC-4), Provider Services Catalog (AHC-5)
 
 -- 1. Brand Tenants (AHC-3)
 CREATE TABLE IF NOT EXISTS brand_tenants (
