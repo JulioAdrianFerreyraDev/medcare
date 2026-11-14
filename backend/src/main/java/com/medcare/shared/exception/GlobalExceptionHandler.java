@@ -1,5 +1,6 @@
 package com.medcare.shared.exception;
 
+import com.medcare.tenancy.SubdomainCollisionException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
@@ -16,6 +17,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(SubdomainCollisionException.class)
+    public ProblemDetail handleSubdomainCollisionException(SubdomainCollisionException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
+        problem.setTitle(ex.getTitle());
+        problem.setType(URI.create("https://medika.com/problems/subdomain-collision"));
+        problem.setProperty("suggestions", ex.getSuggestions());
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 
     @ExceptionHandler(DomainException.class)
     public ProblemDetail handleDomainException(DomainException ex) {

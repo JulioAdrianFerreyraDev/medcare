@@ -29,6 +29,19 @@ spring:
       # Invariant 5: Zero-Binary Backend Media Pipeline (disable multipart upload handling)
       enabled: false
 
+medcare:
+  storage:
+    provider: cloudflare-r2
+    r2:
+      account-id: ${R2_ACCOUNT_ID:your-cloudflare-account-id}
+      endpoint: ${R2_ENDPOINT:https://${R2_ACCOUNT_ID:your-cloudflare-account-id}.r2.cloudflarestorage.com}
+      region: ${R2_REGION:auto}
+      bucket-name: ${R2_BUCKET_NAME:medcare-clinical-media}
+      access-key-id: ${R2_ACCESS_KEY_ID:}
+      secret-access-key: ${R2_SECRET_ACCESS_KEY:}
+      presigned-put-ttl-minutes: ${R2_PRESIGNED_PUT_TTL_MINUTES:15}
+      presigned-get-ttl-minutes: ${R2_PRESIGNED_GET_TTL_MINUTES:5}
+
 server:
   port: ${PORT:8080}
   forward-headers-strategy: framework
