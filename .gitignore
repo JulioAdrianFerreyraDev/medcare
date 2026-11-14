@@ -1,4 +1,4 @@
-docs/jira-stories-breakdown-*.md
+docs/**
 
 # Backend (Maven / Java)
 backend/target/

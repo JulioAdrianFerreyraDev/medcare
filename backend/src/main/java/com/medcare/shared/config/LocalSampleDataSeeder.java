@@ -1,5 +1,7 @@
 package com.medcare.shared.config;
 
+import com.medcare.availability.ProviderShiftEntity;
+import com.medcare.availability.ProviderShiftRepository;
 import com.medcare.branch.ClinicBranchEntity;
 import com.medcare.branch.ClinicBranchRepository;
 import com.medcare.branch.PhysicalRoomEntity;
@@ -14,6 +16,7 @@ import com.medcare.tenancy.BrandTenantEntity;
 import com.medcare.tenancy.BrandTenantRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -47,6 +50,7 @@ public class LocalSampleDataSeeder implements CommandLineRunner {
     private final StaffBranchAssignmentRepository staffAssignmentRepository;
     private final ClinicalServiceRepository serviceRepository;
     private final ServiceAppointmentRepository appointmentRepository;
+    private final ProviderShiftRepository providerShiftRepository;
 
     public LocalSampleDataSeeder(
             BrandTenantRepository tenantRepository,
@@ -54,7 +58,8 @@ public class LocalSampleDataSeeder implements CommandLineRunner {
             PhysicalRoomRepository roomRepository,
             StaffBranchAssignmentRepository staffAssignmentRepository,
             ClinicalServiceRepository serviceRepository,
-            ServiceAppointmentRepository appointmentRepository
+            ServiceAppointmentRepository appointmentRepository,
+            ProviderShiftRepository providerShiftRepository
     ) {
         this.tenantRepository = tenantRepository;
         this.branchRepository = branchRepository;
@@ -62,6 +67,7 @@ public class LocalSampleDataSeeder implements CommandLineRunner {
         this.staffAssignmentRepository = staffAssignmentRepository;
         this.serviceRepository = serviceRepository;
         this.appointmentRepository = appointmentRepository;
+        this.providerShiftRepository = providerShiftRepository;
     }
 
     @Override
@@ -237,6 +243,34 @@ public class LocalSampleDataSeeder implements CommandLineRunner {
                     "SCHEDULED"
             ));
             log.info("Seeded sample cardiology clinical services and 10:00-11:00 AM appointment for Dr. Alejandro Vega.");
+        }
+
+        if (providerShiftRepository.findAllByTenantSlugAndProviderId(TENANT_SLUG, DR_VEGA_ID).isEmpty()) {
+            providerShiftRepository.saveAll(List.of(
+                    new ProviderShiftEntity(
+                            UUID.fromString("00000000-0000-0000-0000-000000000601"),
+                            TENANT_SLUG,
+                            DR_VEGA_ID,
+                            SEDE_NORTE_ID.toString(),
+                            "Sede Norte",
+                            "TUESDAY",
+                            LocalTime.of(9, 0),
+                            LocalTime.of(13, 0),
+                            60
+                    ),
+                    new ProviderShiftEntity(
+                            UUID.fromString("00000000-0000-0000-0000-000000000602"),
+                            TENANT_SLUG,
+                            DR_VEGA_ID,
+                            SEDE_NORTE_ID.toString(),
+                            "Sede Norte",
+                            "TUESDAY",
+                            LocalTime.of(15, 0),
+                            LocalTime.of(19, 0),
+                            60
+                    )
+            ));
+            log.info("Seeded sample weekly shifts for Dr. Alejandro Vega at Sede Norte (Tuesday 09:00-13:00 & 15:00-19:00).");
         }
     }
 }

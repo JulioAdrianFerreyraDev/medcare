@@ -88,6 +88,10 @@ Never compromise or bypass these five architectural rules:
   `DRAFT` ➔ `SCHEDULED` ➔ `WAITING_IN_LOBBY` ➔ `IN_CONSULTATION` ➔ `COMPLETED` (with `CANCELLED` or `REQUIRES_RESCHEDULING` from `SCHEDULED`).
 
 ### Frontend (Nuxt 3 / TypeScript)
+- **Mandatory Stitch UI Approval Gate:** Never automatically design or generate UI screens in Stitch. Before invoking any Stitch screen generation tool (`generate_screen_from_text`, `edit_screens`, `generate_variants`), the agent **must first ask the user for explicit approval**, presenting:
+  1. **What pages/screens will be generated** (screen title, target Nuxt 3 route, device type `DESKTOP`/`MOBILE`, and Jira Story/AC).
+  2. **What exact prompt will be executed for each page.**
+- **Automated OpenAPI TypeScript Generation:** Never hand-write raw backend DTO interfaces or name type files after milestones/epics. Export the OpenAPI spec via `OpenApiSpecExportTest` (`frontend/openapi.json`) or `/api/v1/api-docs` and run `bun run --cwd=frontend generate:types` (`openapi-typescript`) to update `frontend/types/openapi.d.ts`, then reference `components['schemas']` inside domain-scoped files (`frontend/types/tenancy.ts`, `branch.ts`, `catalog.ts`, etc.).
 - Use `<script setup lang="ts">` exclusively; define strict interfaces for `FormDefinition`, appointment states, and tenant branding.
 - Wrap browser-dependent calendar components (`Schedule-X` / `Qalendar`) in `<ClientOnly>` to prevent SSR hydration mismatches.
 - Map appointment statuses to standard UI colors: Blue (`SCHEDULED`), Yellow (`WAITING_IN_LOBBY`), Green (`IN_CONSULTATION`), Grey (`COMPLETED`), Red (`CANCELLED`).

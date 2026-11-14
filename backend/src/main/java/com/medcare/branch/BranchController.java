@@ -10,6 +10,8 @@ import com.medcare.branch.BranchManagementService.ReserveRoomCommand;
 import com.medcare.branch.BranchManagementService.RoomReservationResponse;
 import com.medcare.branch.BranchManagementService.StaffAssignmentResponse;
 import com.medcare.tenancy.TenantContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/branches")
+@Tag(name = "Branches & Consultation Rooms")
 public class BranchController {
 
     private final BranchManagementService branchService;
@@ -37,6 +40,7 @@ public class BranchController {
     }
 
     @GetMapping
+    @Operation(summary = "List all clinic branches (sedes) for the active brand tenant")
     public ResponseEntity<List<BranchResponse>> listBranches(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant
     ) {
@@ -45,6 +49,7 @@ public class BranchController {
     }
 
     @PostMapping
+    @Operation(summary = "Register a new clinic branch (sede) with IANA timezone validation")
     public ResponseEntity<BranchResponse> createBranch(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @Valid @RequestBody CreateBranchRequest request
@@ -61,6 +66,7 @@ public class BranchController {
     }
 
     @GetMapping("/{branchId}/rooms")
+    @Operation(summary = "List physical consultation rooms (consultorios) for a branch")
     public ResponseEntity<List<PhysicalRoomResponse>> listRooms(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @PathVariable UUID branchId
@@ -70,6 +76,7 @@ public class BranchController {
     }
 
     @PostMapping("/{branchId}/rooms")
+    @Operation(summary = "Create a physical consultation room with strict concurrency capacity = 1")
     public ResponseEntity<PhysicalRoomResponse> createPhysicalRoom(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @PathVariable UUID branchId,
@@ -88,6 +95,7 @@ public class BranchController {
     }
 
     @PostMapping("/{branchId}/rooms/{roomId}/reservations")
+    @Operation(summary = "Reserve a physical room time slot (enforcing PostgreSQL btree_gist overlap exclusion)")
     public ResponseEntity<RoomReservationResponse> reserveRoom(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @PathVariable UUID branchId,
@@ -107,6 +115,7 @@ public class BranchController {
     }
 
     @GetMapping("/staff-assignments")
+    @Operation(summary = "List all doctor and receptionist branch assignments for the active tenant")
     public ResponseEntity<List<StaffAssignmentResponse>> listStaffAssignments(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant
     ) {
@@ -115,6 +124,7 @@ public class BranchController {
     }
 
     @PostMapping("/staff-assignments")
+    @Operation(summary = "Assign a doctor (multi-branch allowed) or receptionist (single-branch bound) to a branch")
     public ResponseEntity<StaffAssignmentResponse> assignStaff(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @Valid @RequestBody AssignStaffRequest request
@@ -131,6 +141,7 @@ public class BranchController {
     }
 
     @GetMapping("/{branchId}/scheduling-matrix")
+    @Operation(summary = "Get the branch scheduling matrix of assigned doctors and receptionists")
     public ResponseEntity<BranchSchedulingMatrixResponse> getSchedulingMatrix(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @PathVariable String branchId

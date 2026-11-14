@@ -5,6 +5,8 @@ import com.medcare.catalog.ProviderServiceCatalogService.ClinicalServiceResponse
 import com.medcare.catalog.ProviderServiceCatalogService.CreateServiceCommand;
 import com.medcare.catalog.ProviderServiceCatalogService.ServiceAppointmentResponse;
 import com.medcare.tenancy.TenantContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/providers/{providerId}")
+@Tag(name = "Provider Services Catalog")
 public class ProviderServiceCatalogController {
 
     private final ProviderServiceCatalogService catalogService;
@@ -37,6 +40,7 @@ public class ProviderServiceCatalogController {
     }
 
     @PostMapping("/services")
+    @Operation(summary = "Create a clinical service with specialty, duration in minutes, and consultation fee")
     public ResponseEntity<ClinicalServiceResponse> createService(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @PathVariable String providerId,
@@ -56,6 +60,7 @@ public class ProviderServiceCatalogController {
     }
 
     @PutMapping("/services/{serviceId}")
+    @Operation(summary = "Update an existing clinical service definition")
     public ResponseEntity<ClinicalServiceResponse> updateService(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @PathVariable String providerId,
@@ -76,6 +81,7 @@ public class ProviderServiceCatalogController {
     }
 
     @GetMapping("/services")
+    @Operation(summary = "List clinical services for a provider (filterable by activeOnly)")
     public ResponseEntity<List<ClinicalServiceResponse>> listServices(
             @PathVariable String providerId,
             @RequestParam(defaultValue = "true") boolean activeOnly
@@ -84,6 +90,7 @@ public class ProviderServiceCatalogController {
     }
 
     @PatchMapping("/services/{serviceId}/status")
+    @Operation(summary = "Soft-deactivate (INACTIVE) or reactivate (ACTIVE) a clinical service preserving historical records")
     public ResponseEntity<ClinicalServiceResponse> updateServiceStatus(
             @PathVariable String providerId,
             @PathVariable UUID serviceId,
@@ -93,6 +100,7 @@ public class ProviderServiceCatalogController {
     }
 
     @GetMapping("/appointments")
+    @Operation(summary = "List continuous time-block service appointments for a provider")
     public ResponseEntity<List<ServiceAppointmentResponse>> listAppointments(
             @PathVariable String providerId
     ) {
@@ -100,6 +108,7 @@ public class ProviderServiceCatalogController {
     }
 
     @PostMapping("/appointments")
+    @Operation(summary = "Book a continuous time block based on the clinical service duration")
     public ResponseEntity<ServiceAppointmentResponse> bookAppointment(
             @RequestHeader(value = "X-Tenant-Slug", required = false) String headerTenant,
             @PathVariable String providerId,
@@ -117,6 +126,7 @@ public class ProviderServiceCatalogController {
     }
 
     @GetMapping("/appointments/{appointmentId}")
+    @Operation(summary = "Retrieve a historical appointment preserving snapshot pricing and service name")
     public ResponseEntity<ServiceAppointmentResponse> getAppointment(
             @PathVariable String providerId,
             @PathVariable UUID appointmentId

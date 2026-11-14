@@ -48,6 +48,16 @@ server:
 
 springdoc:
   api-docs:
+    enabled: true
     path: /api/v1/api-docs
   swagger-ui:
+    enabled: true
     path: /api/v1/swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    persist-authorization: true
+    try-it-out-enabled: true
+    filter: true
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json

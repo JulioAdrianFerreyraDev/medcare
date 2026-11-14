@@ -2,6 +2,8 @@ package com.medcare.tenancy;
 
 import com.medcare.tenancy.BrandOnboardingService.BrandOnboardingCommand;
 import com.medcare.tenancy.BrandOnboardingService.BrandOnboardingResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/tenants")
+@Tag(name = "Tenancy & Brand Onboarding")
 public class TenantOnboardingController {
 
     private final BrandOnboardingService onboardingService;
@@ -24,6 +27,10 @@ public class TenantOnboardingController {
     }
 
     @PostMapping
+    @Operation(
+            summary = "Register a new medical brand tenant and provision its exclusive subdomain",
+            description = "[AHC-3 AC-1 & AC-2] Validates slug format and reserved system words, returns 409 Conflict with 3 suggestions on collision, or provisions the tenant and dispatches an activation email."
+    )
     public ResponseEntity<BrandOnboardingResponse> onboardBrand(@Valid @RequestBody TenantOnboardingRequest request) {
         BrandOnboardingResponse response = onboardingService.onboardBrand(new BrandOnboardingCommand(
                 request.legalBusinessName(),
@@ -35,6 +42,10 @@ public class TenantOnboardingController {
     }
 
     @GetMapping("/current")
+    @Operation(
+            summary = "Resolve the active brand tenant from the Host subdomain or X-Tenant-Slug header",
+            description = "[AHC-3 AC-3] Returns the tenant context resolved by TenantInterceptor."
+    )
     public ResponseEntity<BrandOnboardingResponse> getCurrentTenant() {
         return ResponseEntity.ok(onboardingService.getCurrentTenant());
     }
