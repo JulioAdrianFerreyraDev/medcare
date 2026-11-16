@@ -15,7 +15,7 @@ useHead({
 </script>
 
 <template>
-  <div class="min-h-screen bg-surface text-on-surface antialiased">
+  <NuxtLayout>
     <NuxtPage />
-  </div>
+  </NuxtLayout>
 </template>

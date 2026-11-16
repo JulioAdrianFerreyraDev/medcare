@@ -1,9 +1,5 @@
-<script setup lang="ts">
-import MedikaAppShell from '~/components/layout/MedikaAppShell.vue'
-</script>
-
 <template>
-  <MedikaAppShell title="Consola Clínica Medika OS">
+  <div class="min-h-screen bg-surface text-on-surface antialiased">
     <slot />
-  </MedikaAppShell>
+  </div>
 </template>
