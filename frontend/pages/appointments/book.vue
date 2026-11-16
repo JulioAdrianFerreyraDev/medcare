@@ -2,7 +2,7 @@
 import ProviderServicesCatalogView from '~/components/catalog/ProviderServicesCatalogView.vue'
 
 useHead({
-  title: 'Agendar Cita con Navegación y Sidebar Estandarizado (AHC-4)'
+  title: 'Agendar Cita por Duración de Servicio'
 })
 </script>
 

@@ -335,6 +335,12 @@ async function confirmAppointment() {
   }
   showBookingConfirmationToast.value = true
 }
+async function switchCatalogMode(mode: 'DOCTOR_CATALOG' | 'APPOINTMENT_BOOKING') {
+  activeMode.value = mode
+  if (mode === 'DOCTOR_CATALOG') await navigateTo('/doctor/services')
+  else await navigateTo('/appointments/book')
+}
+
 const shellTitle = computed(() =>
   activeMode.value === 'DOCTOR_CATALOG'
     ? 'Mis Servicios Clínicos y Tarifas'
@@ -349,8 +355,8 @@ const shellNav = computed(() =>
 <template>
   <MedikaAppShell
     :title="shellTitle"
-    breadcrumb-section="Catálogo Clínico y Agenda por Duración (AHC-5)"
-    story-badge="AHC-5 · AC-1, AC-2 & AC-3"
+    breadcrumb-section="Catálogo Clínico"
+    story-badge="Servicios y Agenda"
     :active-nav="shellNav"
     user-name="Dr. Alejandro Vega"
     user-initials="AV"
@@ -366,7 +372,7 @@ const shellNav = computed(() =>
               ? 'bg-primary text-on-primary font-semibold'
               : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
           "
-          @click="activeMode = 'DOCTOR_CATALOG'"
+          @click="switchCatalogMode('DOCTOR_CATALOG')"
         >
           Servicios y Tarifas
         </button>
@@ -378,7 +384,7 @@ const shellNav = computed(() =>
               ? 'bg-primary text-on-primary font-semibold'
               : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
           "
-          @click="activeMode = 'APPOINTMENT_BOOKING'"
+          @click="switchCatalogMode('APPOINTMENT_BOOKING')"
         >
           Agenda por Duración
         </button>

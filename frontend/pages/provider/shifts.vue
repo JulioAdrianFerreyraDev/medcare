@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import MedikaAppShell from '~/components/layout/MedikaAppShell.vue'
 
 useHead({
-  title: 'Configuración de Turnos y Horarios (AHC-6)'
+  title: 'Configuración de Turnos y Horarios'
 })
 
 interface ShiftRecord {
@@ -73,8 +73,8 @@ function handleSaveShift() {
 <template>
   <MedikaAppShell
     title="Configuración de Turnos y Horarios"
-    breadcrumb-section="Disponibilidad Médica (AHC-6)"
-    story-badge="AHC-6 · AC-1 & AC-2"
+    breadcrumb-section="Disponibilidad Médica"
+    story-badge="Turnos y Horarios"
     active-nav="provider-shifts"
     user-name="Dr. Alejandro Vega"
     user-initials="AV"
@@ -86,7 +86,7 @@ function handleSaveShift() {
         <div class="space-y-1">
           <div class="flex items-center gap-2">
             <span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-code-sm text-xs font-semibold">
-              AHC-6 · Gestión de Jornada
+              Gestión de Jornada
             </span>
             <span class="font-code-sm text-xs text-outline">Dr. Alejandro Vega · DGP #8472910</span>
           </div>
@@ -104,7 +104,7 @@ function handleSaveShift() {
         </div>
       </section>
 
-      <!-- Cross-Branch Conflict Alert (AC-2: HTTP 422) -->
+      <!-- Cross-Branch Conflict Alert (HTTP 422) -->
       <div
         v-if="conflictAlert"
         role="alert"

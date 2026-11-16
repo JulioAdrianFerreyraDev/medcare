@@ -108,9 +108,16 @@ const activePortalUrl = computed(() => {
   return `https://${slugInput.value || 'clinica-irma'}.medika.com`
 })
 
+async function goToOnboardingStep(step: 'STEP_1_FORM' | 'STEP_2_CLINICAL' | 'STEP_3_ACTIVATED') {
+  currentStep.value = step
+  if (step === 'STEP_1_FORM') await navigateTo('/onboarding')
+  else if (step === 'STEP_2_CLINICAL') await navigateTo('/onboarding/clinical-setup')
+  else await navigateTo('/onboarding/activated')
+}
+
 async function handleStep1Submit() {
   if (!clinicName.value.trim()) return
-  currentStep.value = 'STEP_2_CLINICAL'
+  await goToOnboardingStep('STEP_2_CLINICAL')
 }
 
 async function handleStep2Submit() {
@@ -137,7 +144,7 @@ async function handleStep2Submit() {
         timeZone: 'America/Mexico_City'
       })
     }
-    currentStep.value = 'STEP_3_ACTIVATED'
+    await goToOnboardingStep('STEP_3_ACTIVATED')
   } catch (err: any) {
     const status = err?.statusCode || err?.response?.status
     const suggestions = err?.data?.suggestions || err?.response?._data?.suggestions
@@ -145,10 +152,10 @@ async function handleStep2Submit() {
       slugSuggestions.value = suggestions
       reservedSlugs.value.add(slugInput.value.trim().toLowerCase())
       slugSelectedFromSuggestion.value = false
-      currentStep.value = 'STEP_1_FORM'
+      await goToOnboardingStep('STEP_1_FORM')
     } else {
       // Fallback for offline demo or already-provisioned clinica-irma
-      currentStep.value = 'STEP_3_ACTIVATED'
+      await goToOnboardingStep('STEP_3_ACTIVATED')
     }
   } finally {
     isSubmitting.value = false
@@ -184,8 +191,8 @@ const shellNavId = computed(() => {
 <template>
   <MedikaAppShell
     :title="shellTitle"
-    breadcrumb-section="Onboarding Institucional (AHC-3)"
-    story-badge="AHC-3 · AC-1, AC-2 & AC-3"
+    breadcrumb-section="Onboarding Institucional"
+    story-badge="Registro de Marca"
     :active-nav="shellNavId"
   >
     <template #header-actions>
@@ -194,7 +201,7 @@ const shellNavId = computed(() => {
           type="button"
           class="px-2.5 py-1 rounded-lg transition-colors"
           :class="currentStep === 'STEP_1_FORM' ? 'bg-primary text-on-primary font-semibold' : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'"
-          @click="currentStep = 'STEP_1_FORM'"
+          @click="goToOnboardingStep('STEP_1_FORM')"
         >
           Paso 1
         </button>
@@ -202,7 +209,7 @@ const shellNavId = computed(() => {
           type="button"
           class="px-2.5 py-1 rounded-lg transition-colors"
           :class="currentStep === 'STEP_2_CLINICAL' ? 'bg-primary text-on-primary font-semibold' : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'"
-          @click="currentStep = 'STEP_2_CLINICAL'"
+          @click="goToOnboardingStep('STEP_2_CLINICAL')"
         >
           Paso 2
         </button>
@@ -210,7 +217,7 @@ const shellNavId = computed(() => {
           type="button"
           class="px-2.5 py-1 rounded-lg transition-colors"
           :class="currentStep === 'STEP_3_ACTIVATED' ? 'bg-primary text-on-primary font-semibold' : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'"
-          @click="currentStep = 'STEP_3_ACTIVATED'"
+          @click="goToOnboardingStep('STEP_3_ACTIVATED')"
         >
           Paso 3
         </button>
@@ -230,12 +237,12 @@ const shellNavId = computed(() => {
               <span class="font-title-sm text-xs font-semibold text-primary hidden sm:inline">Paso 1: Registro</span>
             </div>
             <div class="flex-1 h-0.5 mx-2 sm:mx-3 bg-outline-variant/40"></div>
-            <div class="flex items-center gap-2 cursor-pointer" @click="currentStep = 'STEP_2_CLINICAL'">
+            <div class="flex items-center gap-2 cursor-pointer" @click="goToOnboardingStep('STEP_2_CLINICAL')">
               <div class="w-7 h-7 rounded-full bg-surface-container text-on-surface-variant font-semibold text-xs flex items-center justify-center border border-outline-variant/50">2</div>
               <span class="font-title-sm text-xs font-medium text-on-surface-variant hidden sm:inline">Paso 2: Configuración Clínica</span>
             </div>
             <div class="flex-1 h-0.5 mx-2 sm:mx-3 bg-outline-variant/40"></div>
-            <div class="flex items-center gap-2 cursor-pointer" @click="currentStep = 'STEP_3_ACTIVATED'">
+            <div class="flex items-center gap-2 cursor-pointer" @click="goToOnboardingStep('STEP_3_ACTIVATED')">
               <div class="w-7 h-7 rounded-full bg-surface-container text-on-surface-variant font-semibold text-xs flex items-center justify-center border border-outline-variant/50">3</div>
               <span class="font-title-sm text-xs font-medium text-on-surface-variant hidden sm:inline">Paso 3: Verificación</span>
             </div>
@@ -251,7 +258,7 @@ const shellNavId = computed(() => {
             <button
               type="button"
               class="flex items-center gap-space-xs px-3 py-1.5 rounded-full text-on-surface-variant hover:text-on-surface transition-colors"
-              @click="currentStep = 'STEP_2_CLINICAL'"
+              @click="goToOnboardingStep('STEP_2_CLINICAL')"
             >
               <span class="material-symbols-outlined text-[16px] text-outline-variant">radio_button_unchecked</span>
               <span class="font-label-sm text-label-sm">Paso 2: Configuración</span>
@@ -260,7 +267,7 @@ const shellNavId = computed(() => {
             <button
               type="button"
               class="flex items-center gap-space-xs px-3 py-1.5 rounded-full text-on-surface-variant hover:text-on-surface transition-colors"
-              @click="currentStep = 'STEP_3_ACTIVATED'"
+              @click="goToOnboardingStep('STEP_3_ACTIVATED')"
             >
               <span class="material-symbols-outlined text-[16px] text-outline-variant">radio_button_unchecked</span>
               <span class="font-label-sm text-label-sm">Paso 3: Verificación</span>
@@ -476,7 +483,7 @@ const shellNavId = computed(() => {
             <button
               type="button"
               class="flex items-center gap-space-xs px-3 py-1.5 rounded-full bg-surface-container-lowest shadow-sm"
-              @click="currentStep = 'STEP_1_FORM'"
+              @click="goToOnboardingStep('STEP_1_FORM')"
             >
               <span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
               <span class="font-label-sm text-label-sm text-on-surface">Paso 1: Registro</span>
@@ -490,7 +497,7 @@ const shellNavId = computed(() => {
             <button
               type="button"
               class="flex items-center gap-space-xs px-3 py-1.5 rounded-full text-on-surface-variant"
-              @click="currentStep = 'STEP_3_ACTIVATED'"
+              @click="goToOnboardingStep('STEP_3_ACTIVATED')"
             >
               <span class="material-symbols-outlined text-[16px] text-outline-variant">radio_button_unchecked</span>
               <span class="font-label-sm text-label-sm">Paso 3: Verificación</span>
@@ -635,7 +642,7 @@ const shellNavId = computed(() => {
                 <button
                   type="button"
                   class="inline-flex items-center justify-center gap-space-xs font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors py-1"
-                  @click="currentStep = 'STEP_1_FORM'"
+                  @click="goToOnboardingStep('STEP_1_FORM')"
                 >
                   <span class="material-symbols-outlined text-[16px]">arrow_back</span>
                   <span>Volver al paso anterior</span>
@@ -712,7 +719,7 @@ const shellNavId = computed(() => {
             <button
               type="button"
               class="flex items-center gap-space-xs px-3 py-1.5 rounded-full bg-surface-container-lowest shadow-sm"
-              @click="currentStep = 'STEP_1_FORM'"
+              @click="goToOnboardingStep('STEP_1_FORM')"
             >
               <span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
               <span class="font-label-sm text-label-sm text-on-surface">Paso 1: Registro</span>
@@ -721,7 +728,7 @@ const shellNavId = computed(() => {
             <button
               type="button"
               class="flex items-center gap-space-xs px-3 py-1.5 rounded-full bg-surface-container-lowest shadow-sm"
-              @click="currentStep = 'STEP_2_CLINICAL'"
+              @click="goToOnboardingStep('STEP_2_CLINICAL')"
             >
               <span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
               <span class="font-label-sm text-label-sm text-on-surface">Paso 2: Configuración</span>

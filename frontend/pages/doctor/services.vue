@@ -2,7 +2,7 @@
 import ProviderServicesCatalogView from '~/components/catalog/ProviderServicesCatalogView.vue'
 
 useHead({
-  title: 'Mis Servicios y Tarifas - Dr. Alejandro Vega (AHC-4)'
+  title: 'Mis Servicios y Tarifas — Dr. Alejandro Vega'
 })
 </script>
 

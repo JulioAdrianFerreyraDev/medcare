@@ -27,8 +27,8 @@ useHead({
 <template>
   <MedikaAppShell
     :title="`Portal Clínico: ${tenantSlug}`"
-    breadcrumb-section="Tenancy & Aislamiento Multi-Marca"
-    story-badge="AHC-3 · AC-3"
+    breadcrumb-section="Onboarding Institucional"
+    story-badge="Portal Multi-Marca"
     active-nav="tenant-portal"
   >
     <template #header-actions>
@@ -42,7 +42,7 @@ useHead({
       <section class="bg-surface-container-lowest rounded-xl p-space-lg lg:p-space-xl shadow-subtle border border-outline-variant/30 space-y-space-md">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">
-            Subdominio Institucional Aislado (Host Header Resolution)
+            Subdominio Institucional Aislado
           </span>
           <span class="px-3 py-1 rounded-full bg-secondary-container/70 text-on-secondary-container font-code-sm text-code-sm font-semibold">
             Contexto de Tenant Activo: {{ tenantSlug }}
@@ -55,7 +55,7 @@ useHead({
 
         <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl leading-relaxed">
           Bienvenido al portal institucional <span class="font-code-sm text-primary font-semibold">{{ tenantSlug }}.medika.com</span>.
-          Todas las consultas de sedes, consultorios, turnos, bloqueos Redis y catálogo de servicios están aisladas bajo el identificador de tenant activo.
+          Todas las consultas de sedes, consultorios, turnos, bloqueos temporales y catálogo de servicios están aisladas bajo el identificador de tu organización.
         </p>
 
         <!-- Tenant Isolation Telemetry Grid -->
@@ -83,18 +83,11 @@ useHead({
 
         <div class="flex flex-wrap gap-3 pt-2">
           <NuxtLink
-            to="/appointments/book"
+            to="/admin/branches"
             class="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-title-sm text-title-sm inline-flex items-center gap-1.5 transition-colors"
           >
-            <span class="material-symbols-outlined text-[18px]">calendar_month</span>
-            <span>Agendar Cita Médica</span>
-          </NuxtLink>
-          <NuxtLink
-            to="/admin/branches"
-            class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm inline-flex items-center gap-1.5 transition-colors"
-          >
             <span class="material-symbols-outlined text-[18px]">apartment</span>
-            <span>Consola de Sedes</span>
+            <span>Configurar Sedes y Consultorios</span>
           </NuxtLink>
           <NuxtLink
             to="/doctor/services"
@@ -102,6 +95,13 @@ useHead({
           >
             <span class="material-symbols-outlined text-[18px]">receipt_long</span>
             <span>Catálogo de Servicios</span>
+          </NuxtLink>
+          <NuxtLink
+            to="/appointments/book"
+            class="px-4 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title-sm text-title-sm inline-flex items-center gap-1.5 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+            <span>Agendar Cita Médica</span>
           </NuxtLink>
         </div>
       </section>

@@ -2,249 +2,256 @@
 import MedikaAppShell from '~/components/layout/MedikaAppShell.vue'
 
 useHead({
-  title: 'Consola de Módulos Clínicos — Layouts Estandarizados'
+  title: 'Panel Principal — Medika Clinical Platform'
 })
 
 interface PageCard {
   number: string
-  story: string
+  category: string
   title: string
   route: string
   icon: string
   badgeTone: 'primary' | 'secondary' | 'tertiary'
   description: string
-  acceptanceCriteria: string[]
+  highlights: string[]
 }
 
 const standardizedPages: PageCard[] = [
   {
     number: '01',
-    story: 'AHC-3 · Paso 1',
+    category: 'Onboarding · Paso 1',
     title: 'Registro Inicial y Subdominio',
     route: '/onboarding',
     icon: 'domain_add',
     badgeTone: 'primary',
     description:
-      'Registro de marca médica, validación de slugs reservados y manejo de colisión 409 Conflict con 3 sugerencias instantáneas.',
-    acceptanceCriteria: ['AC-1: Validación de slug', 'AC-2: Sugerencias 409 Conflict']
+      'Registro de identidad institucional, validación de dominios reservados y sugerencias automáticas de subdominio disponible.',
+    highlights: ['Validación de subdominio', 'Sugerencias inteligentes']
   },
   {
     number: '02',
-    story: 'AHC-3 · Paso 2',
+    category: 'Onboarding · Paso 2',
     title: 'Configuración Clínica Inicial',
     route: '/onboarding/clinical-setup',
     icon: 'pin_drop',
     badgeTone: 'primary',
     description:
       'Configuración de sede matriz (Sede Centro), capacidad física de consultorios y especialidades médicas iniciales.',
-    acceptanceCriteria: ['AC-1: Sede Matriz', 'Especialidades iniciales']
+    highlights: ['Sede Matriz', 'Especialidades activas']
   },
   {
     number: '03',
-    story: 'AHC-3 · Paso 3',
+    category: 'Onboarding · Paso 3',
     title: 'Confirmación y Activación del Portal',
     route: '/onboarding/activated',
     icon: 'verified',
     badgeTone: 'secondary',
     description:
-      'Activación del subdominio institucional (clinica-irma.medika.com), credenciales maestras y pasos operativos siguientes.',
-    acceptanceCriteria: ['AC-1: Portal activo', 'AC-3: Resolución de Host']
+      'Activación del subdominio institucional (clinica-irma.medika.com), credenciales maestras y accesos directos de operación.',
+    highlights: ['Portal activo', 'Credenciales enviadas']
   },
   {
     number: '04',
-    story: 'AHC-3 · AC-3',
-    title: 'Portal Clínico Multi-Tenant',
+    category: 'Portal Institucional',
+    title: 'Portal Clínico de Marca',
     route: '/portal',
     icon: 'language',
     badgeTone: 'secondary',
     description:
-      'Vista aislada por subdominio con verificación en vivo de TenantContext y navegación directa a módulos de la marca.',
-    acceptanceCriteria: ['AC-3: Aislamiento de Tenant por Host']
+      'Entorno aislado por subdominio con contexto de marca activo y acceso directo a agenda, sedes y catálogo clínico.',
+    highlights: ['Aislamiento por subdominio', 'TLS 1.3']
   },
   {
     number: '05',
-    story: 'AHC-4 · Sedes',
+    category: 'Infraestructura · Sedes',
     title: 'Gestión de Sedes y Consultorios',
     route: '/admin/branches',
     icon: 'apartment',
     badgeTone: 'primary',
     description:
-      'Administración multi-sede (Sede Centro, Sede Norte) y mapeo de consultorios físicos con capacidad estricta = 1 consulta activa.',
-    acceptanceCriteria: ['AC-1: Multi-Sede', 'AC-2: Capacidad = 1 (btree_gist)']
+      'Administración multi-sede (Sede Centro, Sede Norte) y mapeo de consultorios físicos con capacidad estricta de 1 consulta activa.',
+    highlights: ['Multi-Sede', 'Capacidad = 1 consulta']
   },
   {
     number: '06',
-    story: 'AHC-4 · Personal',
+    category: 'Infraestructura · Equipo',
     title: 'Personal por Sede y Asignaciones',
     route: '/admin/staff',
     icon: 'badge',
     badgeTone: 'primary',
     description:
-      'Asignación de médicos en múltiples sedes y restricción estricta de recepcionistas a una única sede (422 Unprocessable Entity).',
-    acceptanceCriteria: ['AC-3: Médico Multi-Sede', 'AC-3: Recepción Sede Única']
+      'Asignación de médicos en múltiples sedes y vinculación de personal de recepción a una única sede operativa.',
+    highlights: ['Médico Multi-Sede', 'Recepción Sede Única']
   },
   {
     number: '07',
-    story: 'AHC-5 · Catálogo',
+    category: 'Catálogo Clínico',
     title: 'Mis Servicios Clínicos y Tarifas',
     route: '/doctor/services',
     icon: 'receipt_long',
     badgeTone: 'secondary',
     description:
-      'Catálogo médico con duración por servicio (20m, 45m, 60m), tarifas en MXN y desactivación suave (INACTIVE) conservando historial.',
-    acceptanceCriteria: ['AC-1: Tarifas MXN', 'AC-3: Soft-deactivation INACTIVE']
+      'Catálogo médico con duración por servicio (20m, 45m, 60m), aranceles en MXN y pausa de servicios conservando historial.',
+    highlights: ['Tarifas en MXN', 'Control de estado']
   },
   {
     number: '08',
-    story: 'AHC-5 · Agenda',
+    category: 'Agendamiento Clínico',
     title: 'Agendar Cita por Duración Continua',
     route: '/appointments/book',
     icon: 'calendar_month',
     badgeTone: 'primary',
     description:
-      'Reserva de bloques continuos según la duración del servicio clínico (60 min) y prevención de solapamientos parciales (409 Conflict).',
-    acceptanceCriteria: ['AC-2: Bloque continuo', 'Prevención de solapamiento']
+      'Reserva de bloques continuos según la duración del servicio clínico y prevención de solapamientos de horario.',
+    highlights: ['Bloque continuo', 'Prevención de traslapes']
   },
   {
     number: '09',
-    story: 'AHC-6 · Turnos',
+    category: 'Disponibilidad · Turnos',
     title: 'Turnos y Horarios del Especialista',
     route: '/provider/shifts',
     icon: 'schedule',
     badgeTone: 'primary',
     description:
-      'Configuración de jornadas divididas por sede (09:00-13:00 y 15:00-19:00), bloqueo de comida (13:00-15:00) y validador inter-sede (422).',
-    acceptanceCriteria: ['AC-1: Turnos y descanso', 'AC-2: Colisión entre sedes 422']
+      'Configuración de jornadas divididas por sede (09:00-13:00 y 15:00-19:00), bloqueo de comida y validador entre sucursales.',
+    highlights: ['Jornada y descanso', 'Validador inter-sede']
   },
   {
     number: '10',
-    story: 'AHC-7 · Ausencias',
+    category: 'Disponibilidad · Excepciones',
     title: 'Ausencias y Cancelaciones de Emergencia',
     route: '/provider/time-off',
     icon: 'event_busy',
     badgeTone: 'tertiary',
     description:
-      'Bloqueo de vacaciones programadas, cancelación de emergencia (REQUIRES_RESCHEDULING), alerta a recepción y bitácora inmutable.',
-    acceptanceCriteria: ['AC-1: Vacaciones', 'AC-2: Emergencia', 'AC-3: Auditoría']
+      'Bloqueo de vacaciones programadas, cancelación de emergencia con reprogramación prioritaria y bitácora de auditoría.',
+    highlights: ['Vacaciones', 'Urgencias y Auditoría']
   },
   {
     number: '11',
-    story: 'AHC-8 · Hold 5m',
-    title: 'Reserva Optimista (TTL 300s) y Confirmación',
+    category: 'Recepción y Pacientes',
+    title: 'Reserva en Línea y Confirmación',
     route: '/booking/doctor-x',
     icon: 'lock_clock',
     badgeTone: 'secondary',
     description:
-      'Pre-bloqueo Redis de 300s sin fricción, confirmación autenticada con OTP/JWT + holdToken (201 Created) y exclusión btree_gist (409).',
-    acceptanceCriteria: ['AC-1: Hold 300s', 'AC-2: JWT + holdToken', 'AC-3/4: TTL & GIST']
+      'Pre-bloqueo temporal de 5 minutos para el paciente y confirmación autenticada con prevención de doble reserva.',
+    highlights: ['Reserva temporal 5m', 'Confirmación verificada']
   }
 ]
 </script>
 
 <template>
   <MedikaAppShell
-    title="Consola de Layouts Estandarizados"
-    breadcrumb-section="Arquitectura UI & Sistema de Diseño"
-    story-badge="AHC-3 a AHC-8 · 11 Vistas"
+    title="Panel Principal de Módulos Clínicos"
+    breadcrumb-section="Inicio"
+    story-badge="Medika OS v4.2"
     active-nav="hub"
   >
     <template #header-actions>
       <NuxtLink
-        to="/appointments/book"
+        to="/onboarding"
         class="h-8 px-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-title-sm text-xs inline-flex items-center gap-1.5 shadow-subtle transition-colors"
       >
-        <span class="material-symbols-outlined text-[16px]">add_circle</span>
-        <span>Nueva Cita</span>
+        <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+        <span>Iniciar Recorrido</span>
       </NuxtLink>
     </template>
 
     <div class="space-y-space-xl">
-      <!-- Standardized Architecture Hero Card -->
+      <!-- Platform Overview Hero Card -->
       <section class="bg-surface-container-lowest rounded-xl p-space-lg lg:p-space-xl border border-outline-variant/30 shadow-subtle space-y-space-md">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-xs font-semibold">
-            <span class="material-symbols-outlined text-[16px] text-primary">dock_to_right</span>
-            App Shell Unificado: Sidebar Persistente (256px) + Header Superior (56px)
+            <span class="material-symbols-outlined text-[16px] text-primary">vital_signs</span>
+            Plataforma Clínica Multi-Sede · Navegación Unificada
           </span>
           <span class="font-code-sm text-xs text-outline">
-            Stitch Project: 6962433513807822761 · Design System: Clinical Clarity
+            Clínica Irma · clinica-irma.medika.com
           </span>
         </div>
 
         <div class="space-y-2 max-w-3xl">
           <h1 class="font-display-lg text-headline-lg lg:text-display-lg text-on-surface tracking-tight">
-            Sistema de Layouts Estandarizados — Medika Clinical OS
+            Consola Operativa — Medika Clinical Platform
           </h1>
           <p class="font-body-lg text-body-md lg:text-body-lg text-on-surface-variant leading-relaxed">
-            Todas las páginas requeridas por las Historias de Usuario (<span class="font-code-sm text-on-surface font-semibold">AHC-3</span> a <span class="font-code-sm text-on-surface font-semibold">AHC-8</span>) comparten el mismo contenedor estructural con barra lateral izquierda prioritaria, cabecera contextual fija y la paleta de color unificada <span class="font-semibold text-primary">Clinical Clarity</span>.
+            Administra el registro institucional, sucursales físicas, consultorios, catálogo de servicios médicos, turnos por sede y agenda de pacientes desde una interfaz estandarizada.
           </p>
         </div>
 
-        <!-- Unified Color Palette Swatch Bar -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-space-sm pt-space-xs">
-          <div class="p-3 rounded-lg bg-surface border border-outline-variant/40 flex items-center gap-2.5">
-            <span class="w-6 h-6 rounded-md bg-primary shrink-0 shadow-subtle"></span>
+        <!-- Quick Workflow Pipeline -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-space-sm pt-space-xs">
+          <NuxtLink
+            to="/onboarding"
+            class="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 flex items-center gap-2.5 transition-colors"
+          >
+            <span class="w-7 h-7 rounded-lg bg-primary text-on-primary font-code-sm text-xs font-bold flex items-center justify-center shrink-0">1</span>
             <div class="min-w-0">
-              <p class="font-title-sm text-xs text-on-surface truncate">Primary</p>
-              <p class="font-code-sm text-[11px] text-outline">#006194</p>
+              <p class="font-title-sm text-xs text-on-surface truncate">Onboarding</p>
+              <p class="font-body-sm text-[11px] text-outline truncate">Marca y Subdominio</p>
             </div>
-          </div>
+          </NuxtLink>
 
-          <div class="p-3 rounded-lg bg-surface border border-outline-variant/40 flex items-center gap-2.5">
-            <span class="w-6 h-6 rounded-md bg-primary-container shrink-0 shadow-subtle"></span>
+          <NuxtLink
+            to="/admin/branches"
+            class="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 flex items-center gap-2.5 transition-colors"
+          >
+            <span class="w-7 h-7 rounded-lg bg-primary text-on-primary font-code-sm text-xs font-bold flex items-center justify-center shrink-0">2</span>
             <div class="min-w-0">
-              <p class="font-title-sm text-xs text-on-surface truncate">Primary Container</p>
-              <p class="font-code-sm text-[11px] text-outline">#007bb9</p>
+              <p class="font-title-sm text-xs text-on-surface truncate">Infraestructura</p>
+              <p class="font-body-sm text-[11px] text-outline truncate">Sedes y Personal</p>
             </div>
-          </div>
+          </NuxtLink>
 
-          <div class="p-3 rounded-lg bg-surface border border-outline-variant/40 flex items-center gap-2.5">
-            <span class="w-6 h-6 rounded-md bg-secondary shrink-0 shadow-subtle"></span>
+          <NuxtLink
+            to="/doctor/services"
+            class="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 flex items-center gap-2.5 transition-colors"
+          >
+            <span class="w-7 h-7 rounded-lg bg-primary text-on-primary font-code-sm text-xs font-bold flex items-center justify-center shrink-0">3</span>
             <div class="min-w-0">
-              <p class="font-title-sm text-xs text-on-surface truncate">Secondary (OK)</p>
-              <p class="font-code-sm text-[11px] text-outline">#006c4a</p>
+              <p class="font-title-sm text-xs text-on-surface truncate">Catálogo Clínico</p>
+              <p class="font-body-sm text-[11px] text-outline truncate">Servicios y Tarifas</p>
             </div>
-          </div>
+          </NuxtLink>
 
-          <div class="p-3 rounded-lg bg-surface border border-outline-variant/40 flex items-center gap-2.5">
-            <span class="w-6 h-6 rounded-md bg-tertiary shrink-0 shadow-subtle"></span>
+          <NuxtLink
+            to="/provider/shifts"
+            class="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 flex items-center gap-2.5 transition-colors"
+          >
+            <span class="w-7 h-7 rounded-lg bg-primary text-on-primary font-code-sm text-xs font-bold flex items-center justify-center shrink-0">4</span>
             <div class="min-w-0">
-              <p class="font-title-sm text-xs text-on-surface truncate">Tertiary (Alert)</p>
-              <p class="font-code-sm text-[11px] text-outline">#ba0035</p>
+              <p class="font-title-sm text-xs text-on-surface truncate">Disponibilidad</p>
+              <p class="font-body-sm text-[11px] text-outline truncate">Turnos y Ausencias</p>
             </div>
-          </div>
+          </NuxtLink>
 
-          <div class="p-3 rounded-lg bg-surface border border-outline-variant/40 flex items-center gap-2.5">
-            <span class="w-6 h-6 rounded-md bg-surface border border-outline-variant shrink-0"></span>
+          <NuxtLink
+            to="/booking/doctor-x"
+            class="p-3 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 flex items-center gap-2.5 transition-colors"
+          >
+            <span class="w-7 h-7 rounded-lg bg-secondary text-on-secondary font-code-sm text-xs font-bold flex items-center justify-center shrink-0">5</span>
             <div class="min-w-0">
-              <p class="font-title-sm text-xs text-on-surface truncate">Surface Canvas</p>
-              <p class="font-code-sm text-[11px] text-outline">#faf8ff</p>
+              <p class="font-title-sm text-xs text-on-surface truncate">Agenda Pública</p>
+              <p class="font-body-sm text-[11px] text-outline truncate">Reserva en Línea</p>
             </div>
-          </div>
-
-          <div class="p-3 rounded-lg bg-surface border border-outline-variant/40 flex items-center gap-2.5">
-            <span class="w-6 h-6 rounded-md bg-on-surface shrink-0"></span>
-            <div class="min-w-0">
-              <p class="font-title-sm text-xs text-on-surface truncate">On Surface</p>
-              <p class="font-code-sm text-[11px] text-outline">#131b2e</p>
-            </div>
-          </div>
+          </NuxtLink>
         </div>
       </section>
 
-      <!-- Standardized Pages Grid (All User Stories AHC-3 to AHC-8) -->
+      <!-- Standardized Modules Grid -->
       <section class="space-y-space-md">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 class="font-headline-md text-headline-md text-on-surface">
-              Páginas Estandarizadas por Historia de Usuario
+              Módulos de la Plataforma Clínica
             </h2>
             <p class="font-body-sm text-body-sm text-on-surface-variant">
-              Selecciona cualquier módulo para abrirlo dentro del mismo layout de Sidebar + Header y paleta de colores unificada.
+              Selecciona cualquier vista o utiliza la barra lateral fija para recorrer el flujo completo.
             </p>
           </div>
           <span class="font-code-sm text-xs text-primary bg-primary-fixed/60 px-3 py-1 rounded-full font-semibold">
-            11 rutas activas · 6 Historias de Usuario
+            11 Módulos Integrados
           </span>
         </div>
 
@@ -280,12 +287,12 @@ const standardizedPages: PageCard[] = [
                         : 'bg-primary-fixed/70 text-on-primary-fixed'
                   "
                 >
-                  {{ page.story }}
+                  {{ page.category }}
                 </span>
               </div>
 
               <div>
-                <span class="font-code-sm text-[11px] text-outline">Vista #{{ page.number }}</span>
+                <span class="font-code-sm text-[11px] text-outline">Módulo {{ page.number }}</span>
                 <h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mt-0.5">
                   {{ page.title }}
                 </h3>
@@ -297,11 +304,11 @@ const standardizedPages: PageCard[] = [
 
               <div class="flex flex-wrap gap-1.5 pt-1">
                 <span
-                  v-for="ac in page.acceptanceCriteria"
-                  :key="ac"
+                  v-for="hl in page.highlights"
+                  :key="hl"
                   class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-[11px]"
                 >
-                  {{ ac }}
+                  {{ hl }}
                 </span>
               </div>
             </div>
@@ -309,7 +316,7 @@ const standardizedPages: PageCard[] = [
             <div class="pt-3 border-t border-outline-variant/25 flex items-center justify-between">
               <span class="font-code-sm text-code-sm text-outline truncate">{{ page.route }}</span>
               <span class="font-title-sm text-title-sm text-primary inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                Abrir vista
+                Abrir módulo
                 <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
               </span>
             </div>

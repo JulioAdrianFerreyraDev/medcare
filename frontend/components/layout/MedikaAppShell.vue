@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useTenancyStore } from '~/stores/tenancy'
 
 const props = withDefaults(
@@ -17,7 +17,7 @@ const props = withDefaults(
   {
     subtitle: '',
     breadcrumbSection: 'Operaciones Clínicas',
-    storyBadge: 'Medika OS v4.2',
+    storyBadge: 'Medika OS',
     syncLabel: 'Sincronizado en tiempo real',
     activeNav: '',
     userRoleLabel: 'Admin Clínico & Especialista',
@@ -30,6 +30,7 @@ const route = useRoute()
 const tenancyStore = useTenancyStore()
 const mobileSidebarOpen = ref(false)
 const globalSearch = ref('')
+const contentScrollContainer = ref<HTMLElement | null>(null)
 
 const activeTenantSlug = computed(() => {
   return tenancyStore.resolvedSlug || 'clinica-irma'
@@ -44,7 +45,7 @@ interface NavItem {
   label: string
   to: string
   icon: string
-  story: string
+  tag: string
 }
 
 interface NavGroup {
@@ -54,120 +55,124 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    groupLabel: 'Vista General',
+    groupLabel: 'Inicio',
     items: [
       {
         id: 'hub',
-        label: 'Consola de Módulos',
+        label: 'Panel Principal',
         to: '/',
         icon: 'dashboard',
-        story: 'HUB'
+        tag: 'Inicio'
       }
     ]
   },
   {
-    groupLabel: 'Tenancy & Onboarding (AHC-3)',
+    groupLabel: 'Onboarding Institucional',
     items: [
       {
         id: 'onboarding-step-1',
         label: '1. Registro y Subdominio',
         to: '/onboarding',
         icon: 'domain_add',
-        story: 'AHC-3'
+        tag: 'Paso 1'
       },
       {
         id: 'onboarding-step-2',
         label: '2. Configuración Clínica',
         to: '/onboarding/clinical-setup',
         icon: 'pin_drop',
-        story: 'AHC-3'
+        tag: 'Paso 2'
       },
       {
         id: 'onboarding-step-3',
         label: '3. Activación de Portal',
         to: '/onboarding/activated',
         icon: 'verified',
-        story: 'AHC-3'
+        tag: 'Paso 3'
       },
       {
         id: 'tenant-portal',
-        label: 'Portal Multi-Tenant',
+        label: 'Portal Institucional',
         to: '/portal',
         icon: 'language',
-        story: 'AHC-3'
+        tag: 'Portal'
       }
     ]
   },
   {
-    groupLabel: 'Sedes & Consultorios (AHC-4)',
+    groupLabel: 'Infraestructura y Sedes',
     items: [
       {
         id: 'branches',
         label: 'Sedes y Consultorios',
         to: '/admin/branches',
         icon: 'apartment',
-        story: 'AHC-4'
+        tag: 'Sedes'
       },
       {
         id: 'staff',
         label: 'Personal por Sede',
         to: '/admin/staff',
         icon: 'badge',
-        story: 'AHC-4'
+        tag: 'Equipo'
       }
     ]
   },
   {
-    groupLabel: 'Catálogo Clínico (AHC-5)',
+    groupLabel: 'Catálogo Clínico',
     items: [
       {
         id: 'services',
         label: 'Mis Servicios y Tarifas',
         to: '/doctor/services',
         icon: 'receipt_long',
-        story: 'AHC-5'
+        tag: 'Tarifas'
       },
       {
         id: 'appointments-book',
         label: 'Agenda por Duración',
         to: '/appointments/book',
         icon: 'calendar_month',
-        story: 'AHC-5'
+        tag: 'Agenda'
       }
     ]
   },
   {
-    groupLabel: 'Turnos & Disponibilidad (AHC-6/7)',
+    groupLabel: 'Disponibilidad Médica',
     items: [
       {
         id: 'provider-shifts',
         label: 'Turnos y Horarios',
         to: '/provider/shifts',
         icon: 'schedule',
-        story: 'AHC-6'
+        tag: 'Turnos'
       },
       {
         id: 'provider-timeoff',
-        label: 'Ausencias y Emergencias',
+        label: 'Ausencias y Urgencias',
         to: '/provider/time-off',
         icon: 'event_busy',
-        story: 'AHC-7'
+        tag: 'Bloqueos'
       }
     ]
   },
   {
-    groupLabel: 'Reserva Optimista (AHC-8)',
+    groupLabel: 'Recepción y Pacientes',
     items: [
       {
         id: 'optimistic-booking',
-        label: 'Reserva Optimista (TTL 5m)',
+        label: 'Reserva en Línea',
         to: '/booking/doctor-x',
         icon: 'lock_clock',
-        story: 'AHC-8'
+        tag: 'Citas'
       }
     ]
   }
 ]
+
+const orderedFlowItems = computed<NavItem[]>(() => {
+  return navGroups.flatMap((group) => group.items)
+})
 
 function isItemActive(item: NavItem): boolean {
   if (props.activeNav) {
@@ -175,11 +180,36 @@ function isItemActive(item: NavItem): boolean {
   }
   return route.path === item.to
 }
+
+const currentFlowIndex = computed(() => {
+  const idx = orderedFlowItems.value.findIndex((item) => isItemActive(item))
+  return idx >= 0 ? idx : 0
+})
+
+const previousFlowItem = computed<NavItem | null>(() => {
+  return currentFlowIndex.value > 0 ? orderedFlowItems.value[currentFlowIndex.value - 1] ?? null : null
+})
+
+const nextFlowItem = computed<NavItem | null>(() => {
+  return currentFlowIndex.value < orderedFlowItems.value.length - 1
+    ? orderedFlowItems.value[currentFlowIndex.value + 1] ?? null
+    : null
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileSidebarOpen.value = false
+    if (contentScrollContainer.value) {
+      contentScrollContainer.value.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+)
 </script>
 
 <template>
-  <div class="min-h-screen bg-surface text-on-surface font-body-md antialiased flex selection:bg-primary-fixed selection:text-on-primary-fixed">
-    <!-- Mobile Backdrop -->
+  <div class="h-screen w-full overflow-hidden bg-surface text-on-surface font-body-md antialiased flex selection:bg-primary-fixed selection:text-on-primary-fixed">
+    <!-- Mobile Backdrop (< 768px) -->
     <div
       v-if="mobileSidebarOpen"
       class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-xs z-40 md:hidden"
@@ -187,10 +217,10 @@ function isItemActive(item: NavItem): boolean {
     ></div>
 
     <!-- =================================================================== -->
-    <!-- STANDARDIZED PERSISTENT LEFT SIDEBAR (w-64 / 256px)                 -->
+    <!-- STICKY / FIXED LEFT SIDEBAR (w-64 / 256px, locked on screen)        -->
     <!-- =================================================================== -->
     <aside
-      class="w-64 shrink-0 bg-surface-container-lowest border-r border-outline-variant/40 flex flex-col justify-between fixed inset-y-0 left-0 z-50 md:static md:translate-x-0 transition-transform duration-200 select-none"
+      class="w-64 h-screen shrink-0 bg-surface-container-lowest border-r border-outline-variant/40 flex flex-col justify-between fixed inset-y-0 left-0 z-50 md:sticky md:top-0 md:translate-x-0 transition-transform duration-200 select-none overflow-hidden"
       :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
       aria-label="Navegación Principal Medika OS"
     >
@@ -211,7 +241,7 @@ function isItemActive(item: NavItem): boolean {
                 </span>
               </div>
               <span class="font-label-sm text-[10px] uppercase tracking-wider text-outline mt-0.5">
-                Clinical SaaS Platform
+                Plataforma Clínica
               </span>
             </div>
           </NuxtLink>
@@ -252,7 +282,7 @@ function isItemActive(item: NavItem): boolean {
           </NuxtLink>
         </div>
 
-        <!-- Standardized Navigation Groups (All User Stories AHC-3 to AHC-8) -->
+        <!-- Standardized Navigation Groups -->
         <nav class="flex-1 overflow-y-auto px-space-sm py-space-sm space-y-4">
           <div v-for="group in navGroups" :key="group.groupLabel" class="space-y-1">
             <div class="px-2.5 py-1 flex items-center justify-between">
@@ -290,7 +320,7 @@ function isItemActive(item: NavItem): boolean {
                     : 'bg-surface-container text-outline'
                 "
               >
-                {{ item.story }}
+                {{ item.tag }}
               </span>
             </NuxtLink>
           </div>
@@ -320,7 +350,7 @@ function isItemActive(item: NavItem): boolean {
           <NuxtLink
             to="/"
             class="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors shrink-0"
-            title="Ir al inicio de consola"
+            title="Ir al Panel Principal"
           >
             <span class="material-symbols-outlined text-[18px]">home</span>
           </NuxtLink>
@@ -329,11 +359,11 @@ function isItemActive(item: NavItem): boolean {
     </aside>
 
     <!-- =================================================================== -->
-    <!-- RIGHT WORKSPACE COLUMN: STICKY TOP HEADER + MAIN PAGE CANVAS        -->
+    <!-- RIGHT WORKSPACE COLUMN: FIXED HEADER + INDEPENDENT SCROLLABLE BODY  -->
     <!-- =================================================================== -->
-    <div class="flex-1 flex flex-col min-w-0 min-h-screen bg-surface">
-      <!-- Standardized Sticky Top Header (h-14 / 56px) -->
-      <header class="h-14 px-margin-mobile lg:px-margin bg-surface-container-lowest/95 backdrop-blur-md border-b border-outline-variant/40 sticky top-0 z-30 flex items-center justify-between gap-4 shrink-0">
+    <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-surface">
+      <!-- Standardized Fixed Top Header (h-14 / 56px) -->
+      <header class="h-14 px-margin-mobile lg:px-margin bg-surface-container-lowest border-b border-outline-variant/40 z-30 flex items-center justify-between gap-4 shrink-0">
         <!-- Left: Mobile Drawer Trigger + Breadcrumb + Sync Pill -->
         <div class="flex items-center gap-3 min-w-0">
           <button
@@ -350,10 +380,10 @@ function isItemActive(item: NavItem): boolean {
               {{ activeTenantName }}
             </NuxtLink>
             <span class="text-outline-variant hidden sm:inline">/</span>
-            <span class="font-label-md text-on-surface-variant truncate hidden md:inline">
+            <span class="font-label-md text-on-surface-variant truncate hidden lg:inline">
               {{ breadcrumbSection }}
             </span>
-            <span class="text-outline-variant hidden md:inline">/</span>
+            <span class="text-outline-variant hidden lg:inline">/</span>
             <span class="font-title-sm text-on-surface font-semibold truncate">
               {{ title }}
             </span>
@@ -365,9 +395,9 @@ function isItemActive(item: NavItem): boolean {
           </span>
         </div>
 
-        <!-- Right: Global Search + Story Badge + Contextual Header Actions -->
-        <div class="flex items-center gap-2.5 shrink-0">
-          <div class="relative hidden md:flex items-center">
+        <!-- Right: Global Search + Flow Controls + Contextual Header Actions -->
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="relative hidden lg:flex items-center">
             <span class="material-symbols-outlined absolute left-2.5 text-outline text-[16px] pointer-events-none">
               search
             </span>
@@ -376,48 +406,113 @@ function isItemActive(item: NavItem): boolean {
               type="search"
               placeholder="Buscar sede, médico, servicio..."
               aria-label="Búsqueda rápida en plataforma"
-              class="h-8 w-56 lg:w-64 pl-8 pr-10 rounded-lg bg-surface-container-low hover:bg-surface-container focus:bg-surface-container-lowest border border-outline-variant/40 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              class="h-8 w-52 xl:w-60 pl-8 pr-10 rounded-lg bg-surface-container-low hover:bg-surface-container focus:bg-surface-container-lowest border border-outline-variant/40 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
             <kbd class="absolute right-2 px-1.5 py-0.5 text-[10px] font-code-sm text-outline bg-surface-container-lowest border border-outline-variant/40 rounded">
               ⌘K
             </kbd>
           </div>
 
-          <span class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary-fixed/60 text-on-primary-fixed font-code-sm text-[11px] font-semibold">
-            <span class="material-symbols-outlined text-[14px] text-primary">verified_user</span>
-            <span>{{ storyBadge }}</span>
-          </span>
+          <!-- Quick Flow Stepper Buttons in Header -->
+          <div class="hidden sm:flex items-center gap-1 bg-surface-container-low p-0.5 rounded-lg border border-outline-variant/30">
+            <NuxtLink
+              v-if="previousFlowItem"
+              :to="previousFlowItem.to"
+              class="h-7 px-2 rounded-md text-xs font-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest inline-flex items-center gap-1 transition-colors"
+              :title="`Anterior: ${previousFlowItem.label}`"
+            >
+              <span class="material-symbols-outlined text-[15px]">chevron_left</span>
+              <span class="hidden xl:inline">Anterior</span>
+            </NuxtLink>
+            <span class="px-2 font-code-sm text-[11px] text-primary font-semibold">
+              {{ currentFlowIndex + 1 }} / {{ orderedFlowItems.length }}
+            </span>
+            <NuxtLink
+              v-if="nextFlowItem"
+              :to="nextFlowItem.to"
+              class="h-7 px-2 rounded-md text-xs font-label-md text-primary hover:bg-surface-container-lowest font-semibold inline-flex items-center gap-1 transition-colors"
+              :title="`Siguiente: ${nextFlowItem.label}`"
+            >
+              <span class="hidden xl:inline">Siguiente</span>
+              <span class="material-symbols-outlined text-[15px]">chevron_right</span>
+            </NuxtLink>
+          </div>
 
           <!-- Page-specific Header Actions Slot -->
           <slot name="header-actions" />
         </div>
       </header>
 
-      <!-- Main Standardized Canvas Area -->
-      <main class="flex-1 w-full max-w-7xl mx-auto px-margin-mobile lg:px-margin py-space-lg lg:py-space-xl">
-        <slot />
-      </main>
+      <!-- ================================================================= -->
+      <!-- INDEPENDENT SCROLLABLE CONTENT CONTAINER (ONLY THIS SCROLLS)      -->
+      <!-- ================================================================= -->
+      <div
+        ref="contentScrollContainer"
+        class="flex-1 overflow-y-auto flex flex-col justify-between"
+      >
+        <main class="flex-1 w-full max-w-7xl mx-auto px-margin-mobile lg:px-margin py-space-lg lg:py-space-xl space-y-space-xl">
+          <slot />
 
-      <!-- Standardized Institutional Footer -->
-      <footer class="w-full px-margin-mobile lg:px-margin py-space-md border-t border-outline-variant/30 bg-surface-container-lowest/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-outline">
-        <div class="flex flex-wrap items-center gap-3">
-          <span class="inline-flex items-center gap-1 font-label-sm text-secondary font-semibold">
-            <span class="material-symbols-outlined text-[15px]">verified</span>
-            NOM-024-SSA3-2012 &amp; HIPAA Compliant
-          </span>
-          <span class="text-outline-variant">•</span>
-          <span class="font-code-sm text-[11px] text-on-surface-variant">
-            Tenant: {{ activeTenantSlug }}.medika.com
-          </span>
-          <span class="text-outline-variant">•</span>
-          <span class="font-code-sm text-[11px] text-outline">
-            Paleta Unificada: Clinical Clarity (#006194 / #006c4a / #ba0035 / #faf8ff)
-          </span>
-        </div>
-        <div class="font-label-sm text-[11px] text-outline">
-          Medika Clinical SaaS Platform · Arquitectura UI Estandarizada (Sidebar + Header)
-        </div>
-      </footer>
+          <!-- Guided Navigation Flow Bar at Bottom of Every Page -->
+          <nav
+            aria-label="Flujo de navegación entre módulos"
+            class="pt-space-lg border-t border-outline-variant/30 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-space-md"
+          >
+            <div>
+              <NuxtLink
+                v-if="previousFlowItem"
+                :to="previousFlowItem.to"
+                class="group px-space-md py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant/40 shadow-subtle inline-flex items-center gap-2.5 transition-all"
+              >
+                <span class="material-symbols-outlined text-[18px] text-outline group-hover:text-primary group-hover:-translate-x-0.5 transition-transform">
+                  arrow_back
+                </span>
+                <div class="flex flex-col text-left">
+                  <span class="font-label-sm text-[10px] uppercase tracking-wider text-outline">Vista Anterior</span>
+                  <span class="font-title-sm text-xs text-on-surface group-hover:text-primary transition-colors">
+                    {{ previousFlowItem.label }}
+                  </span>
+                </div>
+              </NuxtLink>
+            </div>
+
+            <div class="flex items-center justify-end">
+              <NuxtLink
+                v-if="nextFlowItem"
+                :to="nextFlowItem.to"
+                class="group px-space-md py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary shadow-subtle inline-flex items-center gap-2.5 transition-all"
+              >
+                <div class="flex flex-col text-right">
+                  <span class="font-label-sm text-[10px] uppercase tracking-wider text-on-primary/80">Siguiente Módulo</span>
+                  <span class="font-title-sm text-xs text-on-primary font-semibold">
+                    {{ nextFlowItem.label }}
+                  </span>
+                </div>
+                <span class="material-symbols-outlined text-[18px] text-on-primary group-hover:translate-x-0.5 transition-transform">
+                  arrow_forward
+                </span>
+              </NuxtLink>
+            </div>
+          </nav>
+        </main>
+
+        <!-- Standardized Institutional Footer -->
+        <footer class="w-full px-margin-mobile lg:px-margin py-space-md border-t border-outline-variant/30 bg-surface-container-lowest/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-outline shrink-0">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="inline-flex items-center gap-1 font-label-sm text-secondary font-semibold">
+              <span class="material-symbols-outlined text-[15px]">verified</span>
+              NOM-024-SSA3-2012 &amp; HIPAA Compliant
+            </span>
+            <span class="text-outline-variant">•</span>
+            <span class="font-code-sm text-[11px] text-on-surface-variant">
+              Portal: {{ activeTenantSlug }}.medika.com
+            </span>
+          </div>
+          <div class="font-label-sm text-[11px] text-outline">
+            Medika Clinical Platform · Sistema Operativo Clínico Multi-Sede
+          </div>
+        </footer>
+      </div>
     </div>
   </div>
 </template>

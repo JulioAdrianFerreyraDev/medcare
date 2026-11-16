@@ -382,6 +382,12 @@ async function handleAssignStaffSubmit() {
   }, 4000)
 }
 
+async function switchBranchSection(section: 'BRANCHES' | 'STAFF') {
+  activeSection.value = section
+  if (section === 'BRANCHES') await navigateTo('/admin/branches')
+  else await navigateTo('/admin/staff')
+}
+
 const shellTitle = computed(() =>
   activeSection.value === 'BRANCHES'
     ? 'Gestión de Sedes y Consultorios'
@@ -394,8 +400,8 @@ const shellNav = computed(() => (activeSection.value === 'BRANCHES' ? 'branches'
 <template>
   <MedikaAppShell
     :title="shellTitle"
-    breadcrumb-section="Infraestructura y Sedes (AHC-4)"
-    story-badge="AHC-4 · AC-1, AC-2 & AC-3"
+    breadcrumb-section="Infraestructura y Sedes"
+    story-badge="Sedes y Consultorios"
     :active-nav="shellNav"
   >
     <template #header-actions>
@@ -408,7 +414,7 @@ const shellNav = computed(() => (activeSection.value === 'BRANCHES' ? 'branches'
               ? 'bg-primary text-on-primary font-semibold'
               : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
           "
-          @click="activeSection = 'BRANCHES'"
+          @click="switchBranchSection('BRANCHES')"
         >
           Sedes y Consultorios
         </button>
@@ -420,7 +426,7 @@ const shellNav = computed(() => (activeSection.value === 'BRANCHES' ? 'branches'
               ? 'bg-primary text-on-primary font-semibold'
               : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
           "
-          @click="activeSection = 'STAFF'"
+          @click="switchBranchSection('STAFF')"
         >
           Personal por Sede
         </button>
@@ -703,7 +709,7 @@ const shellNav = computed(() => (activeSection.value === 'BRANCHES' ? 'branches'
                             ? 'text-tertiary font-semibold'
                             : 'text-on-surface-variant'
                       "
-                      @click="room.unassigned ? (activeSection = 'STAFF') : undefined"
+                      @click="room.unassigned ? switchBranchSection('STAFF') : undefined"
                     >
                       {{ room.specialistDetail }}
                     </p>
@@ -717,7 +723,7 @@ const shellNav = computed(() => (activeSection.value === 'BRANCHES' ? 'branches'
                   type="button"
                   class="font-semibold transition"
                   :class="room.unassigned ? 'text-primary hover:text-primary-container' : 'text-on-surface-variant hover:text-on-surface'"
-                  @click="activeSection = 'STAFF'"
+                  @click="switchBranchSection('STAFF')"
                 >
                   {{ room.unassigned ? 'Asignar médico' : room.statusState === 'OCCUPIED' ? 'Ver consulta' : 'Editar' }}
                 </button>

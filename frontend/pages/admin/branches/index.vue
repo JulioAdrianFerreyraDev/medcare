@@ -2,7 +2,7 @@
 import BranchAndRoomConsole from '~/components/branch/BranchAndRoomConsole.vue'
 
 useHead({
-  title: 'Gestión de Sedes y Consultorios (AHC-3)'
+  title: 'Gestión de Sedes y Consultorios'
 })
 </script>
 

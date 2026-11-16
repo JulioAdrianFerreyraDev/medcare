@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import MedikaAppShell from '~/components/layout/MedikaAppShell.vue'
 
 useHead({
-  title: 'Ausencias y Cancelaciones de Emergencia (AHC-7)'
+  title: 'Ausencias y Cancelaciones de Emergencia'
 })
 
 const blockType = ref<'PLANNED_LEAVE' | 'EMERGENCY_CANCELLATION'>('PLANNED_LEAVE')
@@ -42,8 +42,8 @@ function handleApplyTimeOff() {
 <template>
   <MedikaAppShell
     title="Gestión de Ausencias y Cancelaciones de Emergencia"
-    breadcrumb-section="Excepciones de Agenda (AHC-7)"
-    story-badge="AHC-7 · AC-1, AC-2 & AC-3"
+    breadcrumb-section="Disponibilidad Médica"
+    story-badge="Control de Excepciones"
     active-nav="provider-timeoff"
     user-name="Dr. Alejandro Vega"
     user-initials="AV"
@@ -55,7 +55,7 @@ function handleApplyTimeOff() {
         <div class="space-y-1">
           <div class="flex items-center gap-2">
             <span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-code-sm text-xs font-semibold">
-              AHC-7 · Control de Excepciones
+              Control de Excepciones
             </span>
             <span class="font-code-sm text-xs text-outline">Bitácora Inmutable Activa</span>
           </div>
@@ -73,7 +73,7 @@ function handleApplyTimeOff() {
         </div>
       </section>
 
-      <!-- High Priority Receptionist Dashboard Alert (AC-2) -->
+      <!-- High Priority Receptionist Dashboard Alert -->
       <div
         v-if="emergencyReceptionAlert"
         role="alert"
@@ -182,7 +182,7 @@ function handleApplyTimeOff() {
               Resultado Operativo y Estado de Citas
             </h2>
 
-            <!-- Planned Leave Result (AC-1) -->
+            <!-- Planned Leave Result -->
             <div
               v-if="plannedLeaveResult"
               class="p-space-md rounded-xl bg-secondary-container/50 border border-secondary/20 text-on-secondary-container flex items-center gap-3"
@@ -191,7 +191,7 @@ function handleApplyTimeOff() {
               <p class="font-title-sm text-sm font-semibold">{{ plannedLeaveResult }}</p>
             </div>
 
-            <!-- Emergency Cancellation Results (AC-2) -->
+            <!-- Emergency Cancellation Results -->
             <div v-if="emergencyTransitionResult" class="space-y-space-sm">
               <div class="p-space-md rounded-xl bg-tertiary-fixed/50 border border-tertiary/20 text-on-tertiary-fixed flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
@@ -223,12 +223,12 @@ function handleApplyTimeOff() {
             </div>
           </div>
 
-          <!-- Immutable Audit Trail Card (AC-3) -->
+          <!-- Immutable Audit Trail Card -->
           <div class="bg-surface-container-lowest rounded-xl p-space-lg border border-outline-variant/30 shadow-subtle space-y-space-sm">
             <div class="flex items-center justify-between">
               <h3 class="font-title-md text-title-md text-on-surface flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-[18px]">policy</span>
-                <span>Bitácora de Auditoría Inmutable (AC-3)</span>
+                <span>Bitácora de Auditoría Inmutable</span>
               </h3>
               <span class="font-code-sm text-[11px] text-outline">Append-Only Log</span>
             </div>

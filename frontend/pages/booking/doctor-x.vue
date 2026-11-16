@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import MedikaAppShell from '~/components/layout/MedikaAppShell.vue'
 
 useHead({
-  title: 'Reserva Optimista (TTL 300s) y Prevención de Doble Reserva (AHC-8)'
+  title: 'Reserva en Línea y Prevención de Doble Reserva'
 })
 
 const holdStatusMessage = ref<string | null>(null)
@@ -43,13 +43,13 @@ function confirmAppointment() {
 
 <template>
   <MedikaAppShell
-    title="Agenda Pública — Doctor X (Reserva Optimista 300s)"
-    breadcrumb-section="Agendamiento de Alta Concurrencia (AHC-8)"
-    story-badge="AHC-8 · AC-1 a AC-4"
+    title="Agenda Pública — Doctor X"
+    breadcrumb-section="Recepción y Pacientes"
+    story-badge="Reserva en Línea"
     active-nav="optimistic-booking"
     user-name="Portal de Pacientes"
     user-initials="PX"
-    user-role-label="Flujo Optimista Redis + GIST"
+    user-role-label="Reserva Verificada"
   >
     <div class="space-y-space-lg">
       <!-- Page Header Card -->
@@ -57,9 +57,9 @@ function confirmAppointment() {
         <div class="space-y-1">
           <div class="flex items-center gap-2">
             <span class="px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-code-sm text-xs font-semibold">
-              AHC-8 · Two-Tier Optimistic Hold
+              Pre-Bloqueo Temporal 5 Minutos
             </span>
-            <span class="font-code-sm text-xs text-outline">Redis Lock TTL: 300s · Max 2 Holds/IP</span>
+            <span class="font-code-sm text-xs text-outline">TTL: 300s · Máx. 2 Reservas Activas</span>
           </div>
           <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
             Agenda Pública — Doctor X
@@ -75,7 +75,7 @@ function confirmAppointment() {
         </div>
       </section>
 
-      <!-- Concurrent Conflict Alert (AC-4: 409 Conflict) -->
+      <!-- Concurrent Conflict Alert (409 Conflict) -->
       <div
         v-if="conflictErrorAlert"
         role="alert"
@@ -168,7 +168,7 @@ function confirmAppointment() {
         <section class="lg:col-span-5 bg-surface-container-lowest rounded-xl p-space-lg border border-outline-variant/30 shadow-subtle space-y-space-md">
           <div class="border-b border-outline-variant/25 pb-space-sm">
             <span class="font-label-sm text-xs uppercase tracking-wider text-secondary font-semibold">
-              Nivel 2 · Confirmación Autenticada (AC-2)
+              Nivel 2 · Confirmación Autenticada
             </span>
             <h2 class="font-headline-sm text-headline-sm text-on-surface mt-0.5">
               Verificación OTP / JWT y Cierre Atómico

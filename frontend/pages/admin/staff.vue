@@ -2,7 +2,7 @@
 import BranchAndRoomConsole from '~/components/branch/BranchAndRoomConsole.vue'
 
 useHead({
-  title: 'Personal por Sede y Asignaciones Físicas (AHC-3)'
+  title: 'Personal por Sede y Asignaciones Físicas'
 })
 </script>
 
