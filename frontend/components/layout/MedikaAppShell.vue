@@ -182,7 +182,7 @@ function isItemActive(item: NavItem): boolean {
     <!-- Mobile Backdrop -->
     <div
       v-if="mobileSidebarOpen"
-      class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-xs z-40 lg:hidden"
+      class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-xs z-40 md:hidden"
       @click="mobileSidebarOpen = false"
     ></div>
 
@@ -190,8 +190,8 @@ function isItemActive(item: NavItem): boolean {
     <!-- STANDARDIZED PERSISTENT LEFT SIDEBAR (w-64 / 256px)                 -->
     <!-- =================================================================== -->
     <aside
-      class="w-64 shrink-0 bg-surface-container-lowest border-r border-outline-variant/40 flex flex-col justify-between fixed inset-y-0 left-0 z-50 lg:static lg:translate-x-0 transition-transform duration-200 select-none"
-      :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+      class="w-64 shrink-0 bg-surface-container-lowest border-r border-outline-variant/40 flex flex-col justify-between fixed inset-y-0 left-0 z-50 md:static md:translate-x-0 transition-transform duration-200 select-none"
+      :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
       aria-label="Navegación Principal Medika OS"
     >
       <div class="flex flex-col min-h-0 flex-1">
@@ -218,7 +218,7 @@ function isItemActive(item: NavItem): boolean {
 
           <button
             type="button"
-            class="lg:hidden p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container-low"
+            class="md:hidden p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container-low"
             aria-label="Cerrar menú lateral"
             @click="mobileSidebarOpen = false"
           >
@@ -338,7 +338,7 @@ function isItemActive(item: NavItem): boolean {
         <div class="flex items-center gap-3 min-w-0">
           <button
             type="button"
-            class="lg:hidden p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+            class="md:hidden p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
             aria-label="Abrir navegación lateral"
             @click="mobileSidebarOpen = true"
           >
