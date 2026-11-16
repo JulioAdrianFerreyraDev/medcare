@@ -1,26 +1,101 @@
 import type { Config } from 'tailwindcss'
 
 export default <Partial<Config>>{
-  content: [
-    './components/**/*.{vue,js,ts}',
-    './layouts/**/*.vue',
-    './pages/**/*.vue',
-    './composables/**/*.{js,ts}',
-    './plugins/**/*.{js,ts}',
-    './app.vue',
-    './error.vue'
-  ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        medical: {
-          primary: '#0284c7',
-          emerald: '#059669',
-          amber: '#d97706',
-          rose: '#e11d48'
-        }
+        'error-container': '#ffdad6',
+        'on-tertiary': '#ffffff',
+        'surface-container': '#eaedff',
+        'primary-fixed-dim': '#93ccff',
+        'primary-container': '#007bb9',
+        'surface-container-low': '#f2f3ff',
+        'tertiary-container': '#e21e49',
+        'surface-dim': '#d2d9f4',
+        'tertiary': '#ba0035',
+        'on-primary': '#ffffff',
+        'inverse-primary': '#93ccff',
+        'on-secondary': '#ffffff',
+        'background': '#faf8ff',
+        'on-background': '#131b2e',
+        'inverse-surface': '#283044',
+        'secondary-container': '#82f5c1',
+        'error': '#ba1a1a',
+        'tertiary-fixed': '#ffdada',
+        'surface-variant': '#dae2fd',
+        'inverse-on-surface': '#eef0ff',
+        'surface-container-high': '#e2e7ff',
+        'on-primary-container': '#fdfcff',
+        'on-tertiary-container': '#fffbff',
+        'surface-tint': '#006398',
+        'secondary-fixed-dim': '#68dba9',
+        'surface-bright': '#faf8ff',
+        'on-error': '#ffffff',
+        'secondary': '#006c4a',
+        'tertiary-fixed-dim': '#ffb3b6',
+        'on-primary-fixed': '#001d31',
+        'primary': '#006194',
+        'on-tertiary-fixed-variant': '#920028',
+        'on-secondary-container': '#00714e',
+        'on-secondary-fixed-variant': '#005137',
+        'primary-fixed': '#cce5ff',
+        'surface-container-highest': '#dae2fd',
+        'on-primary-fixed-variant': '#004b73',
+        'surface': '#faf8ff',
+        'surface-container-lowest': '#ffffff',
+        'on-tertiary-fixed': '#40000c',
+        'on-secondary-fixed': '#002114',
+        'outline': '#707881',
+        'on-surface': '#131b2e',
+        'on-surface-variant': '#3f4850',
+        'outline-variant': '#bfc7d2',
+        'secondary-fixed': '#85f8c4',
+        'on-error-container': '#93000a'
+      },
+      spacing: {
+        'gutter': '1.5rem',
+        'margin-mobile': '1rem',
+        'space-sm': '0.5rem',
+        'space-md': '1rem',
+        'space-xl': '2rem',
+        'space-xs': '0.25rem',
+        'space-lg': '1.5rem',
+        'margin': '2rem',
+        'gutter-sm': '0.75rem'
+      },
+      fontFamily: {
+        'title-sm': ['Inter', 'sans-serif'],
+        'display-lg-mobile': ['Plus Jakarta Sans', 'sans-serif'],
+        'headline-lg-mobile': ['Plus Jakarta Sans', 'sans-serif'],
+        'body-md': ['Inter', 'sans-serif'],
+        'title-md': ['Inter', 'sans-serif'],
+        'headline-lg': ['Plus Jakarta Sans', 'sans-serif'],
+        'headline-sm': ['Plus Jakarta Sans', 'sans-serif'],
+        'body-sm': ['Inter', 'sans-serif'],
+        'body-lg': ['Inter', 'sans-serif'],
+        'headline-md': ['Plus Jakarta Sans', 'sans-serif'],
+        'label-sm': ['Inter', 'sans-serif'],
+        'label-md': ['Inter', 'sans-serif'],
+        'code-sm': ['JetBrains Mono', 'monospace'],
+        'display-lg': ['Plus Jakarta Sans', 'sans-serif']
+      },
+      fontSize: {
+        'title-sm': ['14px', { lineHeight: '20px', letterSpacing: '0em', fontWeight: '600' }],
+        'display-lg-mobile': ['28px', { lineHeight: '36px', letterSpacing: '-0.02em', fontWeight: '700' }],
+        'headline-lg-mobile': ['24px', { lineHeight: '32px', letterSpacing: '-0.015em', fontWeight: '600' }],
+        'body-md': ['14px', { lineHeight: '20px', letterSpacing: '0em', fontWeight: '400' }],
+        'title-md': ['16px', { lineHeight: '22px', letterSpacing: '-0.005em', fontWeight: '600' }],
+        'headline-lg': ['30px', { lineHeight: '38px', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'headline-sm': ['18px', { lineHeight: '24px', letterSpacing: '-0.01em', fontWeight: '600' }],
+        'body-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.005em', fontWeight: '400' }],
+        'body-lg': ['16px', { lineHeight: '24px', letterSpacing: '0em', fontWeight: '400' }],
+        'headline-md': ['22px', { lineHeight: '28px', letterSpacing: '-0.015em', fontWeight: '600' }],
+        'label-sm': ['11px', { lineHeight: '14px', letterSpacing: '0.03em', fontWeight: '600' }],
+        'label-md': ['13px', { lineHeight: '18px', letterSpacing: '0.01em', fontWeight: '500' }],
+        'code-sm': ['12px', { lineHeight: '16px', letterSpacing: '0em', fontWeight: '400' }],
+        'display-lg': ['36px', { lineHeight: '44px', letterSpacing: '-0.025em', fontWeight: '700' }]
       }
     }
-  },
-  plugins: []
+  }
 }

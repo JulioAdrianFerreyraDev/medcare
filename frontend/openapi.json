@@ -1,0 +1,1861 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "Medika Clinical Platform API",
+    "description" : "Multi-Tenant Healthcare SaaS REST API covering:\n- **Tenancy & Brand Onboarding (AHC-3):** Automated subdomain provisioning, reserved slug validation, and collision suggestions.\n- **Branches & Consultation Rooms (AHC-4):** Multi-branch clinic management, physical consultation rooms, `btree_gist` room reservation locks, and staff RBAC assignments.\n- **Provider Services Catalog (AHC-5):** Clinical services pricing catalog, continuous duration slot allocation, and soft deactivation preserving historical records.\n- **Provider Availability & Exceptions (AHC-6 & AHC-7):** Recurring weekly working shifts, meal break blocking, cross-branch collision prevention (`422`), planned leave blocking, emergency cancellations (`REQUIRES_RESCHEDULING`), receptionist alerts, and immutable audit logs.\n- **Optimistic Slot Hold & Scheduling (AHC-8):** Unauthenticated 300s Redis slot holds (`lock:doctor:{id}:slot:{HHmm}`) with Turnstile verification & IP rate limiting (max 2 active holds/IP), and authenticated double-booking-free confirmation (`POST /api/v1/appointments`).\n",
+    "contact" : {
+      "name" : "Advanta HealthConnect Architecture Team",
+      "url" : "https://medika.com",
+      "email" : "architecture@medika.com"
+    },
+    "license" : {
+      "name" : "Proprietary - Advanta Health Care",
+      "url" : "https://medika.com/terms"
+    },
+    "version" : "1.1.0"
+  },
+  "externalDocs" : {
+    "description" : "Medika SRS & Architecture Documentation",
+    "url" : "https://julio-ferreyra-dev.atlassian.net/browse/AHC"
+  },
+  "servers" : [ {
+    "url" : "http://localhost:8080",
+    "description" : "Local Development Server (Default)"
+  }, {
+    "url" : "http://clinica-irma.localhost:8080",
+    "description" : "Local Wildcard Subdomain Tenant (Clínica Irma)"
+  }, {
+    "url" : "https://api.medika.com",
+    "description" : "Production API Gateway"
+  } ],
+  "security" : [ {
+    "tenantSlugHeader" : [ ],
+    "bearerAuth" : [ ]
+  } ],
+  "tags" : [ {
+    "name" : "Tenancy & Brand Onboarding",
+    "description" : "[AHC-3] Brand tenant registration, subdomain slug validation, and tenant context resolution"
+  }, {
+    "name" : "Branches & Consultation Rooms",
+    "description" : "[AHC-4] Multi-branch management, physical consultation rooms, room reservations, and staff branch assignments"
+  }, {
+    "name" : "Provider Services Catalog",
+    "description" : "[AHC-5] Clinical services & pricing catalog, continuous slot block booking, and soft-deactivation"
+  }, {
+    "name" : "Provider Availability & Exceptions",
+    "description" : "[AHC-6 & AHC-7] Weekly working shifts, meal breaks, cross-branch conflict detection, planned leave, emergency cancellations, and audit logs"
+  }, {
+    "name" : "Optimistic Slot Hold & Scheduling",
+    "description" : "[AHC-8] Unauthenticated 300s Redis slot holds, IP rate limiting, and authenticated double-booking-free appointment confirmation"
+  } ],
+  "paths" : {
+    "/api/v1/providers/{providerId}/services/{serviceId}" : {
+      "put" : {
+        "tags" : [ "Provider Services Catalog" ],
+        "summary" : "Update an existing clinical service definition",
+        "operationId" : "updateService",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "serviceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateServiceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClinicalServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants" : {
+      "post" : {
+        "tags" : [ "Tenancy & Brand Onboarding" ],
+        "summary" : "Register a new medical brand tenant and provision its exclusive subdomain",
+        "description" : "[AHC-3 AC-1 & AC-2] Validates slug format and reserved system words, returns 409 Conflict with 3 suggestions on collision, or provisions the tenant and dispatches an activation email.",
+        "operationId" : "onboardBrand",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TenantOnboardingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BrandOnboardingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/slots/hold" : {
+      "post" : {
+        "tags" : [ "Optimistic Slot Hold & Scheduling" ],
+        "summary" : "Place an unauthenticated 300-second optimistic hold on a slot",
+        "description" : "[AHC-8 AC-1 & AC-3] Verifies Turnstile anti-bot token and IP rate limits (max 2 active holds per IP), creates Redis lock `lock:doctor:{id}:slot:{HHmm}` mapped to `holdToken` with 300s TTL, and hides the slot from other users.",
+        "operationId" : "acquireSlotHold",
+        "parameters" : [ {
+          "name" : "X-Forwarded-For",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcquireSlotHoldCommand"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SlotHoldResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/time-off" : {
+      "post" : {
+        "tags" : [ "Provider Availability & Exceptions" ],
+        "summary" : "Register a planned leave block for future dates with zero booked appointments",
+        "description" : "[AHC-7 AC-1 & AC-3] Immediately suppresses all public and internal slots in the date range and writes an immutable audit log entry.",
+        "operationId" : "registerPlannedLeave",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PlannedLeaveCommand"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeOffBlockResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/shifts" : {
+      "get" : {
+        "tags" : [ "Provider Availability & Exceptions" ],
+        "summary" : "List all configured weekly shift windows for a provider across branches",
+        "operationId" : "listProviderShifts",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderShiftResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Provider Availability & Exceptions" ],
+        "summary" : "Configure recurring weekly shift windows and meal breaks for a provider at a branch",
+        "description" : "[AHC-6 AC-1 & AC-2] Saves weekly shift windows per branch and rejects cross-branch schedule collisions on the same weekday with HTTP 422 Unprocessable Entity.",
+        "operationId" : "configureWeeklyShifts",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfigureWeeklyShiftTemplateCommand"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProviderShiftResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/services" : {
+      "get" : {
+        "tags" : [ "Provider Services Catalog" ],
+        "summary" : "List clinical services for a provider (filterable by activeOnly)",
+        "operationId" : "listServices",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ClinicalServiceResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Provider Services Catalog" ],
+        "summary" : "Create a clinical service with specialty, duration in minutes, and consultation fee",
+        "operationId" : "createService",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateServiceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClinicalServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/emergency-cancellations" : {
+      "post" : {
+        "tags" : [ "Provider Availability & Exceptions" ],
+        "summary" : "Trigger an urgent emergency cancellation block with a mandatory reason",
+        "description" : "[AHC-7 AC-2 & AC-3] Transitions all affected SCHEDULED appointments to REQUIRES_RESCHEDULING, creates a HIGH-priority receptionist alert, notifies affected patients, and records an immutable audit log.",
+        "operationId" : "triggerEmergencyCancellation",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EmergencyCancellationCommand"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeOffBlockResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/appointments" : {
+      "get" : {
+        "tags" : [ "Provider Services Catalog" ],
+        "summary" : "List continuous time-block service appointments for a provider",
+        "operationId" : "listAppointments",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceAppointmentResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Provider Services Catalog" ],
+        "summary" : "Book a continuous time block based on the clinical service duration",
+        "operationId" : "bookAppointment",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BookServiceAppointmentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceAppointmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/branches" : {
+      "get" : {
+        "tags" : [ "Branches & Consultation Rooms" ],
+        "summary" : "List all clinic branches (sedes) for the active brand tenant",
+        "operationId" : "listBranches",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/BranchResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Branches & Consultation Rooms" ],
+        "summary" : "Register a new clinic branch (sede) with IANA timezone validation",
+        "operationId" : "createBranch",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateBranchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/branches/{branchId}/rooms" : {
+      "get" : {
+        "tags" : [ "Branches & Consultation Rooms" ],
+        "summary" : "List physical consultation rooms (consultorios) for a branch",
+        "operationId" : "listRooms",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "branchId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PhysicalRoomResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Branches & Consultation Rooms" ],
+        "summary" : "Create a physical consultation room with strict concurrency capacity = 1",
+        "operationId" : "createPhysicalRoom",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "branchId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateRoomRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PhysicalRoomResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/branches/{branchId}/rooms/{roomId}/reservations" : {
+      "post" : {
+        "tags" : [ "Branches & Consultation Rooms" ],
+        "summary" : "Reserve a physical room time slot (enforcing PostgreSQL btree_gist overlap exclusion)",
+        "operationId" : "reserveRoom",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "branchId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "roomId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReserveRoomRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RoomReservationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/branches/staff-assignments" : {
+      "get" : {
+        "tags" : [ "Branches & Consultation Rooms" ],
+        "summary" : "List all doctor and receptionist branch assignments for the active tenant",
+        "operationId" : "listStaffAssignments",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/StaffAssignmentResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "Branches & Consultation Rooms" ],
+        "summary" : "Assign a doctor (multi-branch allowed) or receptionist (single-branch bound) to a branch",
+        "operationId" : "assignStaff",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AssignStaffRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/StaffAssignmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appointments" : {
+      "post" : {
+        "tags" : [ "Optimistic Slot Hold & Scheduling" ],
+        "summary" : "Confirm an appointment using a valid Bearer JWT and matching holdToken",
+        "description" : "[AHC-8 AC-2 & AC-4] Verifies Redis lock ownership, persists the appointment in PostgreSQL as SCHEDULED with btree_gist temporal exclusion, deletes the Redis lock, and returns 201 Created.",
+        "operationId" : "confirmAppointment",
+        "parameters" : [ {
+          "name" : "Authorization",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfirmAppointmentCommand"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScheduledAppointmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/services/{serviceId}/status" : {
+      "patch" : {
+        "tags" : [ "Provider Services Catalog" ],
+        "summary" : "Soft-deactivate (INACTIVE) or reactivate (ACTIVE) a clinical service preserving historical records",
+        "operationId" : "updateServiceStatus",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "serviceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateServiceStatusRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClinicalServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/current" : {
+      "get" : {
+        "tags" : [ "Tenancy & Brand Onboarding" ],
+        "summary" : "Resolve the active brand tenant from the Host subdomain or X-Tenant-Slug header",
+        "description" : "[AHC-3 AC-3] Returns the tenant context resolved by TenantInterceptor.",
+        "operationId" : "getCurrentTenant",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BrandOnboardingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/cancellation-audit-logs" : {
+      "get" : {
+        "tags" : [ "Provider Availability & Exceptions" ],
+        "summary" : "List immutable schedule block and cancellation audit log entries for a provider",
+        "operationId" : "listCancellationAuditLogs",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CancellationAuditLogResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/available-slots" : {
+      "get" : {
+        "tags" : [ "Provider Availability & Exceptions" ],
+        "summary" : "Generate real-time bookable slots for a provider on a specific date and branch",
+        "description" : "[AHC-6 AC-1, AHC-7 AC-1, AHC-8 AC-1 & AC-3] Exposes bookable slots strictly within shift windows, blocking meal breaks, planned leave ranges, active 300s Redis holds, and confirmed appointments.",
+        "operationId" : "getAvailableSlots",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "branchId",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "date",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "durationMinutes",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/BookableSlotResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{providerId}/appointments/{appointmentId}" : {
+      "get" : {
+        "tags" : [ "Provider Services Catalog" ],
+        "summary" : "Retrieve a historical appointment preserving snapshot pricing and service name",
+        "operationId" : "getAppointment",
+        "parameters" : [ {
+          "name" : "providerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "appointmentId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceAppointmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/providers/{doctorId}/scheduled-appointments" : {
+      "get" : {
+        "tags" : [ "Optimistic Slot Hold & Scheduling" ],
+        "summary" : "List confirmed and rescheduling-pending appointments for a doctor",
+        "operationId" : "listDoctorAppointments",
+        "parameters" : [ {
+          "name" : "doctorId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ScheduledAppointmentResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/branches/{branchId}/scheduling-matrix" : {
+      "get" : {
+        "tags" : [ "Branches & Consultation Rooms" ],
+        "summary" : "Get the branch scheduling matrix of assigned doctors and receptionists",
+        "operationId" : "getSchedulingMatrix",
+        "parameters" : [ {
+          "name" : "X-Tenant-Slug",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "branchId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BranchSchedulingMatrixResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/branches/{branchId}/receptionist-alerts" : {
+      "get" : {
+        "tags" : [ "Provider Availability & Exceptions" ],
+        "summary" : "List high-priority receptionist dashboard alerts for a branch",
+        "operationId" : "listReceptionistAlerts",
+        "parameters" : [ {
+          "name" : "branchId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReceptionistAlertResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "CreateServiceRequest" : {
+        "required" : [ "currency", "feeAmount", "name", "specialty" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "specialty" : {
+            "type" : "string"
+          },
+          "durationMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "feeAmount" : {
+            "type" : "number"
+          },
+          "currency" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ClinicalServiceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "providerId" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "specialty" : {
+            "type" : "string"
+          },
+          "durationMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "feeAmount" : {
+            "type" : "number"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "TenantOnboardingRequest" : {
+        "required" : [ "contactEmail", "contactPhone", "legalBusinessName", "slug" ],
+        "type" : "object",
+        "properties" : {
+          "legalBusinessName" : {
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "type" : "string"
+          },
+          "contactPhone" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          }
+        }
+      },
+      "BrandOnboardingResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legalBusinessName" : {
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "type" : "string"
+          },
+          "contactPhone" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "subdomainHost" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "activationEmailDispatched" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "AcquireSlotHoldCommand" : {
+        "required" : [ "branchId", "doctorId", "endTime", "startTime", "turnstileToken" ],
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "string"
+          },
+          "doctorId" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "turnstileToken" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SlotHoldResponse" : {
+        "type" : "object",
+        "properties" : {
+          "redisKey" : {
+            "type" : "string"
+          },
+          "holdToken" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string"
+          },
+          "doctorId" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "ttlSeconds" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PlannedLeaveCommand" : {
+        "required" : [ "branchId", "endDateTime", "reason", "startDateTime" ],
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "string"
+          },
+          "startDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        }
+      },
+      "TimeOffBlockResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantSlug" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string"
+          },
+          "blockType" : {
+            "type" : "string"
+          },
+          "startDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "affectedAppointmentsCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "rescheduledAppointmentIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "receptionistAlertId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "auditLogId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "ConfigureWeeklyShiftTemplateCommand" : {
+        "required" : [ "branchId", "branchName", "dayOfWeek", "windows" ],
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "string"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "dayOfWeek" : {
+            "type" : "string"
+          },
+          "slotIntervalMinutes" : {
+            "maximum" : 240,
+            "minimum" : 5,
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "windows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ShiftWindowInput"
+            }
+          }
+        }
+      },
+      "LocalTime" : {
+        "type" : "object",
+        "properties" : {
+          "hour" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minute" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "second" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "nano" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ShiftWindowInput" : {
+        "required" : [ "endTime", "startTime" ],
+        "type" : "object",
+        "properties" : {
+          "startTime" : {
+            "$ref" : "#/components/schemas/LocalTime"
+          },
+          "endTime" : {
+            "$ref" : "#/components/schemas/LocalTime"
+          }
+        }
+      },
+      "ProviderShiftResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantSlug" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "dayOfWeek" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "$ref" : "#/components/schemas/LocalTime"
+          },
+          "endTime" : {
+            "$ref" : "#/components/schemas/LocalTime"
+          },
+          "slotIntervalMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "EmergencyCancellationCommand" : {
+        "required" : [ "branchId", "endDateTime", "reason", "startDateTime" ],
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "string"
+          },
+          "startDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        }
+      },
+      "BookServiceAppointmentRequest" : {
+        "required" : [ "patientName", "serviceId", "startTime" ],
+        "type" : "object",
+        "properties" : {
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "patientName" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "ServiceAppointmentResponse" : {
+        "type" : "object",
+        "properties" : {
+          "appointmentId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "providerId" : {
+            "type" : "string"
+          },
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "serviceNameSnapshot" : {
+            "type" : "string"
+          },
+          "patientName" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "durationMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "billedFee" : {
+            "type" : "number"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CreateBranchRequest" : {
+        "required" : [ "address", "contactPhone", "name", "timezone" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "contactPhone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "BranchResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantSlug" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "contactPhone" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "CreateRoomRequest" : {
+        "required" : [ "name", "roomType" ],
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "roomType" : {
+            "type" : "string"
+          },
+          "concurrencyCapacity" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "PhysicalRoomResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantSlug" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "roomType" : {
+            "type" : "string"
+          },
+          "concurrencyCapacity" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ReserveRoomRequest" : {
+        "required" : [ "doctorId", "endTime", "startTime" ],
+        "type" : "object",
+        "properties" : {
+          "doctorId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "RoomReservationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "roomId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "doctorId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AssignStaffRequest" : {
+        "required" : [ "branchId", "role", "staffId", "staffName" ],
+        "type" : "object",
+        "properties" : {
+          "staffId" : {
+            "type" : "string"
+          },
+          "staffName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "StaffAssignmentResponse" : {
+        "type" : "object",
+        "properties" : {
+          "staffId" : {
+            "type" : "string"
+          },
+          "staffName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "assignedBranches" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "ConfirmAppointmentCommand" : {
+        "required" : [ "branchId", "doctorId", "endTime", "holdToken", "patientContact", "patientId", "patientName", "roomId", "startTime" ],
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "string"
+          },
+          "roomId" : {
+            "type" : "string"
+          },
+          "doctorId" : {
+            "type" : "string"
+          },
+          "patientId" : {
+            "type" : "string"
+          },
+          "patientName" : {
+            "type" : "string"
+          },
+          "patientContact" : {
+            "type" : "string"
+          },
+          "holdToken" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "ScheduledAppointmentResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantSlug" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string"
+          },
+          "roomId" : {
+            "type" : "string"
+          },
+          "doctorId" : {
+            "type" : "string"
+          },
+          "patientId" : {
+            "type" : "string"
+          },
+          "patientName" : {
+            "type" : "string"
+          },
+          "patientContact" : {
+            "type" : "string"
+          },
+          "holdToken" : {
+            "type" : "string"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UpdateServiceStatusRequest" : {
+        "required" : [ "status" ],
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CancellationAuditLogResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantSlug" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "type" : "string"
+          },
+          "blockId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "actionType" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "affectedAppointmentsCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "recordedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "BookableSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "providerId" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "localStartTime" : {
+            "$ref" : "#/components/schemas/LocalTime"
+          },
+          "localEndTime" : {
+            "$ref" : "#/components/schemas/LocalTime"
+          },
+          "startTimeUtc" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endTimeUtc" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "available" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "BranchSchedulingMatrixResponse" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "string"
+          },
+          "providers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProviderAssignmentItem"
+            }
+          }
+        }
+      },
+      "ProviderAssignmentItem" : {
+        "type" : "object",
+        "properties" : {
+          "staffId" : {
+            "type" : "string"
+          },
+          "staffName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ReceptionistAlertResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantSlug" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "type" : "string"
+          },
+          "severity" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "affectedAppointmentsCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "type" : "http",
+        "description" : "Stateless JWT token obtained after login or WhatsApp/Email OTP verification",
+        "name" : "bearerAuth",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      },
+      "tenantSlugHeader" : {
+        "type" : "apiKey",
+        "description" : "Explicit multi-tenant brand slug header (e.g. 'clinica-irma') when not invoking via wildcard subdomain Host",
+        "name" : "X-Tenant-Slug",
+        "in" : "header"
+      }
+    }
+  }
+}
