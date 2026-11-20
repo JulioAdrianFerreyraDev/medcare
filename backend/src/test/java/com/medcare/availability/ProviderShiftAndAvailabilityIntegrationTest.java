@@ -35,8 +35,14 @@ class ProviderShiftAndAvailabilityIntegrationTest {
     @Autowired
     private ProviderShiftRepository shiftRepository;
 
+    @Autowired
+    private com.medcare.scheduling.ScheduledAppointmentRepository scheduledAppointmentRepository;
+
     @BeforeEach
     void cleanDatabase() {
+        if (scheduledAppointmentRepository != null) {
+            scheduledAppointmentRepository.deleteAll();
+        }
         shiftRepository.deleteAll();
     }
 

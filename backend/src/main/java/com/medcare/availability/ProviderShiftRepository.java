@@ -8,6 +8,12 @@ public interface ProviderShiftRepository extends JpaRepository<ProviderShiftEnti
 
     List<ProviderShiftEntity> findAllByTenantSlugAndProviderId(String tenantSlug, String providerId);
 
+    List<ProviderShiftEntity> findAllByTenantSlugAndBranchIdAndDayOfWeek(
+            String tenantSlug,
+            String branchId,
+            String dayOfWeek
+    );
+
     List<ProviderShiftEntity> findAllByTenantSlugAndProviderIdAndDayOfWeek(
             String tenantSlug,
             String providerId,
